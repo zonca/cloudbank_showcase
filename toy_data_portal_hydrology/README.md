@@ -28,7 +28,7 @@ Docker container with a simple web portal implemented in Python FastHTML.
 
 ## Content of the tutorial
 
-Each part of the tutorial will have extensive explanations on the services used.
+*   Each part of the tutorial will have extensive explanations on the services used.
 *   We will also compare how each component of our toy model is actually implemented in production within the HydroShare portal.
 
 ### Part 1, Toy Data Portal
