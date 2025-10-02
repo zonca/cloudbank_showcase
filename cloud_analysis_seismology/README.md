@@ -41,6 +41,3 @@ Details on AWS resources used in these tutorials:
 
 ---
 Each tutorial will provide step-by-step instructions, code examples, and best practices for reproducible cloud-based seismology analysis.
-# Cloud Analysis Seismology
-
-This branch will contain work related to cloud analysis for seismology.
