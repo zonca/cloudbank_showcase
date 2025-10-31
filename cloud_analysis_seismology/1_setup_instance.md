@@ -112,8 +112,8 @@ As you may notice, the EC2 you just launched has no user-specific software insta
 3. Run the docker image as container. This will launch a Jupyter Lab within the container. The command also forwards port 8888 from the container to port 80 on the EC2 instance. The jupyter lab will then running at port 80 (default port of http service). The `IdentityProvider.token` specifies a password (`scoped` in this case) in order to access your Jupyter lab.
    
     ```bash
-    sudo docker run -p 80:8888 --rm -it ghcr.io/seisscoped/seis_cloud:centos7_jupyterlab \
-            nohup jupyter lab --no-browser --ip=0.0.0.0 --allow-root  --IdentityProvider.token=scoped &
+    sudo docker run -p 80:8888 --rm -it ghcr.io/seisscoped/noisepy:centos7_jupyterlab\
+        nohup jupyter lab --no-browser --ip=0.0.0.0 --allow-root  --IdentityProvider.token=scoped &
     ```
 
 An EC2 instance has two IP addresses: one for the AWS internal networking system, one open to the public. To access the notebook, you need to connect on the public IP address. Open a browser, type the IP address of the instance (see the Public IPv4 DNS). Then simply type the address in the browser. Be sure to use `http://`, i.e., `http://Your-Public-IPv4-DNS`. You can find the public IPv4 DNS address on the web console.
