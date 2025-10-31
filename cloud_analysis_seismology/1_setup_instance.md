@@ -60,35 +60,34 @@ Launch an instance using **EC2 (Elastic Computing Cloud)**. Follow the steps bel
 5. **Instance Type**: This specifies the RAM, vCPU, network, etc. `t2.xlarge` is recommended for this tutorial.
 6. **Key Pair**: Create a new key pair, or specify an existing one. Download the `.pem` file, move it to a location that you can have access to and remember where it is. 
    
-    :::{note}
-    * If the file does not save as `.pem`, replace the extension with `.pem`. 
-    * For Windows users, download the type ED25519 and the `.ppk` file.
-    * You can re-use the key created previously, if you still have access to that file.
-    :::
+    > [!NOTE]
+    > * If the file does not save as `.pem`, replace the extension with `.pem`.
+    > * For Windows users, download the type ED25519 and the `.ppk` file.
+    > * You can re-use the key created previously, if you still have access to that file.
 
 7. **Network Settings**: Select existing security group -> Select security group -> Select `web-ssh-access`. This allows traffics in and out of the instance and is required for SSH (port 22) and Jupyter lab connection.
 8. **Configure Storage**: Add more storage to your instance. 20 GiB will be sufficient for this tutorial.
 9. **Launch instance** with the current configuration. Wait until the instance showing a `Running` state on the console.
 10. **Connect to the instance**: AWS provides web-based connection where you don't need to have a SSH client installed. Click on your instance -> Connect -> EC2 Instance Connect.
     
-    :::{note}
-    There are alternative ways connecting to the instance using the SSH client installed on your laptop.
-
-    a. On **Linux/macOS**, copy the ssh link command in the folder where the PEM file is below and ssh to the instance. Be sure to change the permission of the key file so that it is only readable to you. You only need to do it once.
-    ```bash
-    chmod 400 file.pem
-
-    ssh -i "file.pem" ec2-user@Your-Public-IPv4-DNS
-    ```
-
-    b. On **Windows**, login to an EC2 instance using **PuTTY** (a free SSH client):
-    * Open PuTTY. On the PuTTY Configuration screen, click Session in the Category pane.
-    * In the Host Name (or IP address) box, paste ``ec2-user@Your-Public-IPv4-DNS``. Your public IPv4 DNS can be found in the details of your EC2 instance.
-    * Make sure Connection type: SSH is clicked
-    * Back in the Category pane, expand Connection, expand SSH, and click Auth.
-    * In the Private key file for AUTH/Credentials box, click browse and locate your ``.ppk`` file for the instance that you created and click. Depending on the version of Putty, 
-    * Now click open and accept the connection.
-    :::
+    > [!NOTE]
+    > There are alternative ways connecting to the instance using the SSH client installed on your laptop.
+    >
+    > a. On **Linux/macOS**, copy the ssh link command in the folder where the PEM file is below and ssh to the instance. Be sure to change the permission of the key file so that it is only readable to you. You only need to do it once.
+    >
+    > ```bash
+    > chmod 400 file.pem
+    >
+    > ssh -i "file.pem" ec2-user@Your-Public-IPv4-DNS
+    > ```
+    >
+    > b. On **Windows**, login to an EC2 instance using **PuTTY** (a free SSH client):
+    > * Open PuTTY. On the PuTTY Configuration screen, click Session in the Category pane.
+    > * In the Host Name (or IP address) box, paste ``ec2-user@Your-Public-IPv4-DNS``. Your public IPv4 DNS can be found in the details of your EC2 instance.
+    > * Make sure Connection type: SSH is clicked
+    > * Back in the Category pane, expand Connection, expand SSH, and click Auth.
+    > * In the Private key file for AUTH/Credentials box, click browse and locate your ``.ppk`` file for the instance that you created and click. Depending on the version of Putty, 
+    > * Now click open and accept the connection.
 
 ## Environment Configuration
 As you may notice, the EC2 you just launched has no user-specific software installed at all. Next we will configure the computing environment using a Docker container.
@@ -141,6 +140,5 @@ You have to save it every time you want to save the current state of the instanc
 
 What is the difference between stop and terminate and instance: saving data vs cost. If you stop, you do not pay for the hardware, but you will pay for the EBS volume only and the data is saved in the EBS volume. If you terminate, all data will be wiped and you will cease to pay.
 
-:::{note}
-Visit [here](https://docs.rightscale.com/faq/clouds/aws/Whats_the_difference_between_Terminating_and_Stopping_an_EC2_Instance.html) to read more about stopping vs terminating.
-:::
+ > [!NOTE]
+ > Visit [here](https://docs.rightscale.com/faq/clouds/aws/Whats_the_difference_between_Terminating_and_Stopping_an_EC2_Instance.html) to read more about stopping vs terminating.
