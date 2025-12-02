@@ -18,7 +18,7 @@ An important aspect of cloud is that the computing and data centers are distribu
 
 ### Creating a security group to grant external access to an instance
 
-### How to Create an EC2 Security Group with SSH (22) and HTTP (80)
+### How to Create an EC2 Security Group with SSH (22), HTTP (80), and HTTPS (443)
 
 Open the EC2 Console  
 AWS Console → **EC2**
@@ -33,12 +33,13 @@ Basic Details
 - Description: `Allow SSH and HTTP`
 
 Add Inbound Rules  
-Click **Add rule** twice, for source select `Anywhere-IPv4`:
+Click **Add rule** three times, for source select `Anywhere-IPv4`:
 
 | Type | Protocol | Port | Source |
 |------|----------|------|--------|
 | SSH  | TCP      | 22   | `0.0.0.0/0` |
 | HTTP | TCP      | 80   | `0.0.0.0/0` |
+| HTTPS | TCP     | 443  | `0.0.0.0/0` |
 
 Leave Outbound Rules as default (All traffic allowed)
 
@@ -47,7 +48,7 @@ Click **Create security group**
 Attach the Security Group to an EC2 Instance  
 - When launching a new instance, choose **Select existing security group** and pick `web-ssh-access`  
 - For an existing instance:  
-  Actions → Networking → Change security groups → select `web-ssh-access` → Save
+    Actions → Networking → Change security groups → select `web-ssh-access` → Save
 
 Your instance now allows SSH on port 22 and HTTP on port 80.
 
@@ -109,17 +110,35 @@ As you may notice, the EC2 you just launched has no user-specific software insta
     sudo docker pull ghcr.io/seisscoped/seis_cloud:centos7_jupyterlab
     ```
 
-3. Run the docker image as container. This will launch a Jupyter Lab within the container. The command also forwards port 8888 from the container to port 80 on the EC2 instance. The jupyter lab will then running at port 80 (default port of http service). The `IdentityProvider.token` specifies a password (`scoped` in this case) in order to access your Jupyter lab.
+3. Run the docker image as container (with HTTPS). This launches Jupyter Lab inside the container, forwards container port 8888 to port 80 on the EC2 instance, and enables HTTPS using a self-signed certificate tied to the instance Public DNS. Copy the *Public DNS (IPv4)* from the EC2 console, export it, and create the certificate pair:
+
+    ```bash
+    export URL="ec2-xxx-x-xxx-xx.us-west-2.compute.amazonaws.com"  # replace with your Public DNS
+
+    mkdir -p /home/ec2-user/jupyter-cert
+    cd /home/ec2-user/jupyter-cert
+
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+      -keyout jupyter.key -out jupyter.crt \
+      -subj "/CN=${URL}"
+    ```
+
+    Start the container and mount the certificate directory so Jupyter Lab can serve HTTPS:
+
     ```bash
     sudo docker run -p 80:8888 --rm -it \
         --user $(id -u ec2-user):$(id -g ec2-user) \
         -v /home/ec2-user:/home/scoped \
+        -v /home/ec2-user/jupyter-cert:/home/scoped/jupyter-cert \
         -e HOME=/home/scoped \
         ghcr.io/seisscoped/noisepy:centos7_jupyterlab \
-        jupyter lab --no-browser --ip=0.0.0.0 --IdentityProvider.token=scoped
+        jupyter lab --no-browser --ip=0.0.0.0 \
+            --IdentityProvider.token=scoped \
+            --certfile=/home/scoped/jupyter-cert/jupyter.crt \
+            --keyfile=/home/scoped/jupyter-cert/jupyter.key
     ```
 
-An EC2 instance has two IP addresses: one for the AWS internal networking system, one open to the public. To access the notebook, you need to connect on the public IP address. Open a browser, type the IP address of the instance (see the Public IPv4 DNS). Then simply type the address in the browser. Be sure to use `http://`, i.e., `http://Your-Public-IPv4-DNS`. You can find the public IPv4 DNS address on the web console.
+An EC2 instance has two IP addresses: one for the AWS internal networking system, one open to the public. To access the notebook, you need to connect on the public IP address. Open a browser, type the Public IPv4 DNS of the instance, and navigate to `https://Your-Public-IPv4-DNS`. Because the certificate is self-signed you will see a browser warning—proceed after confirming the certificate details.
 
 You will be prompted for a token. Please enter `scoped` (case sensitive), as we specified in `--IdentityProvider.token=scoped` argument.
 
