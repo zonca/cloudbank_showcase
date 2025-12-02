@@ -105,12 +105,14 @@ As you may notice, the EC2 you just launched has no user-specific software insta
     # Docker version xx.x.x, build xxxxx
     ```
 
-2. Pull the image. This will pull the Docker image named `seisscoped/seis_cloud` from the GitHub Container Registry.
+    > **Important:** Log out and back in (or run `newgrp docker`) before issuing any `docker` commands so the updated group membership takes effect. Otherwise you will see "permission denied" errors when trying to access the Docker daemon.
+
+2. Pull the image. This will pull the Docker image named `ghcr.io/seisscoped/noisepy:centos7_jupyterlab` from the GitHub Container Registry.
     ```bash
-    sudo docker pull ghcr.io/seisscoped/seis_cloud:centos7_jupyterlab
+    sudo docker pull ghcr.io/seisscoped/noisepy:centos7_jupyterlab
     ```
 
-3. Run the docker image as container (with HTTPS). This launches Jupyter Lab inside the container, forwards container port 8888 to port 80 on the EC2 instance, and enables HTTPS using a self-signed certificate tied to the instance Public DNS. Copy the *Public DNS (IPv4)* from the EC2 console, export it, and create the certificate pair:
+3. Run the docker image as container (with HTTPS). This launches Jupyter Lab inside the container, forwards container port 8888 to port **443** on the EC2 instance, and enables HTTPS using a self-signed certificate tied to the instance Public DNS. Copy the *Public DNS (IPv4)* from the EC2 console, export it, and create the certificate pair:
 
     ```bash
     export URL="ec2-xxx-x-xxx-xx.us-west-2.compute.amazonaws.com"  # replace with your Public DNS

@@ -12,13 +12,12 @@ This guide will walk you through creating AWS access keys for S3 read/write and 
 3. In the sidebar, click **Users** > **Create user**.
 4. Enter a username (e.g., `s3-access-user`).
 5. Click **Next: Permissions**.
-6. Attach existing policies directly. For S3 read/write, search for and select:
-	- `AmazonS3FullAccess` (or create a custom policy for more restricted access).
+6. Attach permissions. Prefer a least-privilege policy scoped to the buckets you actually need. For example, create a customer-managed policy that grants **read-only** access to `arn:aws:s3:::scedc-pds/*` (public data) and **write** access only to `arn:aws:s3:::your-project-bucket/*`. Avoid `AmazonS3FullAccess` unless you truly need administrator-level access.
 7. Click **Create user**.
 8. Click on the user just created.
 9. Under **Security credentials**, click **Create access key** > **Command Line Interface**.
 10. Save the **Access Key ID** and **Secret Access Key**. **You will not be able to see the secret again!**
-	- **Important:** Make sure you are not committing these credentials to a git repository.
+	- **Important:** Store the keys in a secure secrets manager and never commit them to git. When possible, prefer using an EC2 instance profile/role so you do not need long-lived access keys at all.
 
 ---
 
