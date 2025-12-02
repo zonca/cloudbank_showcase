@@ -126,7 +126,7 @@ As you may notice, the EC2 you just launched has no user-specific software insta
     Start the container and mount the certificate directory so Jupyter Lab can serve HTTPS:
 
     ```bash
-    sudo docker run -p 80:8888 --rm -it \
+    docker run -p 443:8888 --rm -it \
         --user $(id -u ec2-user):$(id -g ec2-user) \
         -v /home/ec2-user:/home/scoped \
         -v /home/ec2-user/jupyter-cert:/home/scoped/jupyter-cert \
