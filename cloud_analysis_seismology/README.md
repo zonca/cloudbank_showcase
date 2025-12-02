@@ -1,43 +1,32 @@
 # Cloud Seismology Analysis Tutorials
 
-This project provides a set of interconnected tutorials for running seismology noise analysis workflows in the cloud, inspired by the [NoisePy SCEC Tutorial](https://seisscoped.org/HPS-book/chapters/noise/noisepy_scedc_tutorial.html).
+This repository hosts step-by-step guides that show how to stand up an AWS-based environment for seismic noise studies and then run the SCEDC NoisePy workflow entirely against S3-hosted data. The tutorials build on one another and mirror the workflow described in the [NoisePy SCEC Tutorial](https://seisscoped.org/HPS-book/chapters/noise/noisepy_scedc_tutorial.html).
 
-## Tutorial Overview
+## Repository Contents
 
-### 1. EC2 + Docker + Jupyter + S3
-* Launch an EC2 instance on AWS
-* Use Docker to customize and manage the software environment
-* Run and access a Jupyter notebook server
-* Store and retrieve data on S3
+1. **`1_setup_instance.md` – EC2 + Docker + Jupyter + S3**  
+	Walks through logging in via CloudBank, choosing an AWS region, creating the security group that opens ports 22/80/443, launching an Amazon Linux EC2 instance, and configuring Docker + the `ghcr.io/seisscoped/noisepy:centos7_jupyterlab` image so you can reach Jupyter Lab securely over HTTPS.
 
-### 2. AWS Batch Workflow
-* Launch a similar noise analysis workflow using AWS Batch for scalable, automated execution
-* Covers job definition, submission, and monitoring
+2. **`2_read_write_object_storage.md` – Creating S3 access keys and configuring the AWS CLI**  
+	Covers creating an IAM user with `AmazonS3FullAccess`, generating CLI credentials, running `aws configure`, and testing access with `aws s3 ls` so you can read and write seismic data on S3 from your notebook session.
 
-### 3. Coiled for Distributed Analysis
-* Run the analysis using [Coiled](https://coiled.io/) for distributed Dask clusters in the cloud
-* Focus on workflow portability and scaling
+3. **`3_tutorial_noisepy_scedc_s3_explained.ipynb` – NoisePy SCEDC workflow notebook**  
+	A Jupyter tutorial that installs `noisepy-seis`, explains why cloud-native processing helps, and processes the SCEDC public dataset directly from AWS S3, demonstrating end-to-end ambient noise cross-correlation without local data transfers.
 
-These tutorials are designed to be modular but interconnected, allowing you to progress from a simple interactive setup to scalable, automated cloud workflows.
+## How to Use This Repo
 
-## Additional Topics (Planned)
+1. **Provision the compute environment** by following `1_setup_instance.md`. When the container is running, connect to `https://<your-public-ip>` and supply the `scoped` token set in the Docker command.
+2. **Enable object storage access** with `2_read_write_object_storage.md` so the notebook can stream data to/from S3 using your IAM credentials.
+3. **Open the notebook** `3_tutorial_noisepy_scedc_s3_explained.ipynb` inside that Jupyter Lab session to run the full NoisePy example. Adjust regions, bucket names, or NoisePy parameters as needed for your project.
 
-* Earthquake Catalog Analysis (using Fargate, AWS Batch, MongoDB Atlas)
-	* See: [Seisbench Catalog Tutorial](https://seisscoped.org/HPS-book/chapters/quake_catalog/seisbench_catalog.html)
+## Future Work (planned)
+
+Additional workflows—such as AWS Batch orchestration, Coiled-managed Dask clusters, and earthquake catalog analysis with Fargate + MongoDB Atlas—will be added in separate tutorials.
 
 ## References
 
 * [NoisePy SCEC Tutorial](https://seisscoped.org/HPS-book/chapters/noise/noisepy_scedc_tutorial.html)
-
-## Resources Used
-
-Details on AWS resources used in these tutorials:
-
-* **EC2**: Compute instances for interactive and batch analysis
-* **S3**: Storage for input/output data
-* **AWS Batch**: Managed batch computing for scalable workflows
-* **Coiled**: Managed Dask clusters for distributed computing
-* **(Planned) Fargate & MongoDB Atlas**: For earthquake catalog workflows
+* [SCEDC Public Data Set on AWS](https://scedc.caltech.edu/data/getstarted-pds.html)
 
 ---
-Each tutorial will provide step-by-step instructions, code examples, and best practices for reproducible cloud-based seismology analysis.
+Each document is self-contained and can be followed independently, but working through them sequentially provides a complete pathway from bare-metal cloud setup to running NoisePy against AWS-hosted seismic data.
