@@ -22,18 +22,18 @@ LOCAL_NETCDF = None  # optional local fallback
 OUT_PLOT = 'plot.png'
 
 # %% [markdown]
-# # 3 - Explore portal data from JupyterHub (script form)
+# # 3 - Explore portal data from JupyterHub
 #
-# This script mirrors the notebook in step 3. It:
+# What this does:
 # - Lists datasets from the toy data portal API.
 # - Falls back to a local NetCDF if `LOCAL_NETCDF` is set or the portal is unreachable.
 # - Downloads the chosen file (if not local), opens it with xarray, prints metadata, and saves a quick plot.
-# - Designed for two-way sync with a notebook via Jupytext (format: `ipynb` and `py:percent`).
+# - Kept in sync with the notebook via Jupytext (`ipynb` and `py:percent`).
 #
-# Environment variables:
-# - `PORTAL_BASE` (default `http://<EXTERNAL-IP>`): base URL of the portal.
-# - `LOCAL_NETCDF` (optional): path to a local NetCDF file to use if the portal is empty/unreachable.
-# - `OUT_PLOT` (optional): where to save the plot PNG (default `plot.png`).
+# Configure at the top of the notebook:
+# - `PORTAL_BASE`: required unless `LOCAL_NETCDF` is set (use `http://<EXTERNAL-IP>` from the portal service).
+# - `LOCAL_NETCDF`: optional local NetCDF path to skip the portal download.
+# - `OUT_PLOT`: optional plot output path (default `plot.png`).
 
 # %%
 import os
