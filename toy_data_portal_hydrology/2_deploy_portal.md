@@ -112,7 +112,7 @@ curl "http://${PORTAL_IP}/healthz"
 Expected `healthz` output: `{"status":"ok"}`. Opening `http://<EXTERNAL-IP>/` in a browser shows the portal landing page and upload form:
 ![Portal upload form](img/portal-upload-empty.png)
 
-Download one of the sample NetCDF files listed in `README.md` (for example the RouteLink file), upload it through the form, and compare what you see with the screenshots to confirm the file is present:
+Download one of the sample NetCDF files listed in `README.md` (for example the RouteLink NetCDF at https://www.hydroshare.org/resource/0a596929a3e5411bb0032a8de35e5089/), upload it through the form, and compare what you see with the screenshots to confirm the file is present:
 ![Portal upload list](img/portal-upload-list.png)
 
 Clicking a dataset shows extracted metadata:
