@@ -46,3 +46,4 @@ You should now see a node in `Ready` state:
 NAME                                         STATUS   ROLES    AGE   VERSION
 gk3-toy-hydro-cluster-pool-1-da2ea5bf-kcd6   Ready    <none>   5s    v1.33.5-gke.1308000
 ```
+Only worker nodes appear here; the control plane in GKE Autopilot is managed by Google and is not exposed as a node.
