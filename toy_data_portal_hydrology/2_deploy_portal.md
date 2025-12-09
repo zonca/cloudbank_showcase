@@ -27,7 +27,9 @@ gcloud iam service-accounts add-iam-policy-binding "portal-gsa@${PROJECT_ID}.iam
   --role="roles/iam.workloadIdentityUser"
 ```
 Grant the portal Google service account read and write access to the bucket:
-```bash
+```basgcloud storage buckets add-iam-policy-binding "gs://${PORTAL_BUCKET}" \
+  --member="allUsers" \
+  --role="roles/storage.objectViewer"h
 gcloud storage buckets add-iam-policy-binding "gs://${PORTAL_BUCKET}" \
   --member="serviceAccount:portal-gsa@${PROJECT_ID}.iam.gserviceaccount.com" \
   --role="roles/storage.objectCreator"
