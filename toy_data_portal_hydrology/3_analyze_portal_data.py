@@ -17,7 +17,7 @@
 # %pip install -q requests pandas xarray matplotlib netCDF4
 
 # %%
-PORTAL_BASE = "http://136.117.247.219"  # set to the portal external IP for this tutorial
+PORTAL_BASE = "http://toy-portal.portal.svc.cluster.local"  # in-cluster service DNS; replace with external IP if accessing from outside
 LOCAL_NETCDF = None  # optional local fallback
 
 # %% [markdown]
@@ -30,7 +30,7 @@ LOCAL_NETCDF = None  # optional local fallback
 # - Kept in sync with the notebook via Jupytext (`ipynb` and `py:percent`).
 #
 # Configure at the top of the notebook:
-# - `PORTAL_BASE`: required unless `LOCAL_NETCDF` is set (use the external IP of the portal service, for example `http://35.x.x.x`).
+# - `PORTAL_BASE`: required unless `LOCAL_NETCDF` is set (inside the cluster use `http://toy-portal.portal.svc.cluster.local`; from outside use the portal external IP like `http://35.x.x.x`).
 # - `LOCAL_NETCDF`: optional local NetCDF path to skip the portal download.
 # - Plot is saved to `plot.png` in the working directory.
 
