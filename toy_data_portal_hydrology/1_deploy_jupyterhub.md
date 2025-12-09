@@ -55,12 +55,17 @@ scheduling:
     enabled: false
   podPriority:
     enabled: true
+
+prePuller:
+  hook:
+    enabled: false
 EOF
 ```
 Notes:
 - Only the user listed in `admin_users` / `allowed_users` can log in. Update those lists if you need others.
 - `userScheduler.enabled: false` is required because GKE Autopilot forbids custom schedulers; we must use the default GKE scheduler.
 - `cloudMetadata.blockWithIptables: false` is required because Autopilot disallows pods that add NET_ADMIN/iptables rules; leaving it `true` would be rejected by Autopilot’s security controls.
+- `podPriority.enabled: true` lets the chart set higher priority for the hub pods, while disabling the `prePuller.hook` avoids the failing image-puller hook (the chart expected a `jhub-image-puller-priority` class that was not present). The hook only pre-pulls images for speed, so turning it off is safe.
 Dummy authentication is only for this tutorial; change it before exposing to real users. The password generated above is available in `JHUB_PASS` for the session.
 
 3) Install or upgrade the release (this pulls the latest chart):
