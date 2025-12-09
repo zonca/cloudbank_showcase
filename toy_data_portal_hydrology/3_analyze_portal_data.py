@@ -31,7 +31,7 @@ OUT_PLOT = 'plot.png'
 # - Kept in sync with the notebook via Jupytext (`ipynb` and `py:percent`).
 #
 # Configure at the top of the notebook:
-# - `PORTAL_BASE`: required unless `LOCAL_NETCDF` is set (use `http://<EXTERNAL-IP>` from the portal service).
+# - `PORTAL_BASE`: required unless `LOCAL_NETCDF` is set (use the external IP of the portal service, for example `http://35.x.x.x`).
 # - `LOCAL_NETCDF`: optional local NetCDF path to skip the portal download.
 # - `OUT_PLOT`: optional plot output path (default `plot.png`).
 
