@@ -6,6 +6,25 @@ HydroShare is an online collaboration environment developed by CUAHSI for sharin
 
 However, HydroShare is a large and complex platform, with extensive features and integrations that make it challenging to directly use or adapt its tooling for smaller projects. The goal here is to build a simplified, toy version of such a platform to better understand its core concepts and functionalities in a more manageable scope.
 
+## Selected datasets
+
+| # | Title | HydroShare URL | Size | Notes |
+|---|---|---|---|---|
+| 1 | CAMELS USGS Streamflow NetCDF from 1980 to 2014 | https://www.hydroshare.org/resource/38f9499d3dbc4e9b95a6256c87460191/ (HydroShare) | 36.6 MB | CAMELS USGS streamflow time series (1980–2014), Multidimensional NetCDF with WGS84 EPSG:4326 coverage over the USA. |
+| 2 | NWM Routelink NetCDF | https://www.hydroshare.org/resource/0a596929a3e5411bb0032a8de35e5089/ (HydroShare) | 256.9 MB | National Water Model RouteLink NetCDF (v2.2.0 domain file), Multidimensional NetCDF with WGS84 EPSG:4326, CONUS-wide spatial coverage. |
+
+## Metadata handling (toy portal scope)
+
+Goal: keep metadata simple but interoperable. HydroShare uses [Dublin Core](https://www.dublincore.org/specifications/dublin-core/dces/) for catalog metadata (separate from the NetCDF internal attributes). For the toy portal we can store a small JSON blob per resource with a minimal Dublin Core subset:
+
+* `title`, `description`, `creator`, `publisher` (often the uploader), `contributor` (optional)
+* `subject` keywords (e.g., hydrology, streamflow, routing), `type` (dataset), `format` (e.g., NetCDF)
+* `identifier` (stable URL/UUID), `source` (original HydroShare URL), `rights` (license/usage)
+* `coverage` split as `spatial` (bbox, CRS) and `temporal` (start/end)
+* `date` (created) and `modified`
+
+Small NetCDF samples listed above are enough for testing. Optional future polish (not required for the toy portal): a landing page that surfaces these fields and a `schema.org` JSON-LD view to improve findability in search engines.
+
 
 ## Input needed
 
