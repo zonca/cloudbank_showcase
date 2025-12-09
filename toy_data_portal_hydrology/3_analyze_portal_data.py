@@ -17,7 +17,7 @@
 # %pip install -q requests pandas xarray matplotlib netCDF4
 
 # %%
-PORTAL_BASE = None  # set to the portal external IP, for example http://35.x.x.x
+PORTAL_BASE = "http://136.117.247.219"  # set to the portal external IP for this tutorial
 LOCAL_NETCDF = None  # optional local fallback
 OUT_PLOT = "plot.png"
 
