@@ -31,15 +31,13 @@ proxy:
 
 hub:
   config:
-    JupyterHub:
+    Authenticator:
       admin_users:
         - ${JHUB_ADMIN}
       allowed_users:
         - ${JHUB_ADMIN}
-      authenticator:
-        type: dummy
-        dummy:
-          password: "${JHUB_PASS}"
+    DummyAuthenticator:
+      password: "${JHUB_PASS}"
 
 singleuser:
   image:
