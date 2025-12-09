@@ -47,42 +47,6 @@ Tip: Cloud Shell includes Gemini; you can ask it to run `gcloud`, `kubectl`, and
    EOF
    ```
    Dummy authentication is only for this tutorial; change it before exposing to real users.
-
-   **GitHub sign-in (optional)**  
-   If you prefer GitHub authentication, create a GitHub OAuth app (Settings ▸ Developer settings ▸ OAuth Apps) with:
-   - Homepage URL: `http://<EXTERNAL-IP>/`
-   - Authorization callback URL: `http://<EXTERNAL-IP>/hub/oauth_callback`
-   (If you want to avoid DNS setup, you can use a wildcard like `http://<EXTERNAL-IP>.nip.io/` for both fields, which resolves to the same IP.)
-
-   Then use this values file instead of the dummy auth section above:
-   ```bash
-   cat <<'EOF' > jhub-config.yaml
-   proxy:
-     service:
-       type: LoadBalancer
-
-   hub:
-     config:
-       JupyterHub:
-         admin_users:
-           - your-admin-user
-
-   auth:
-     type: github
-     github:
-       clientId: "<github-client-id>"
-       clientSecret: "<github-client-secret>"
-       callbackUrl: "http://<EXTERNAL-IP>/hub/oauth_callback"
-
-   singleuser:
-     image:
-       name: jupyter/datascience-notebook
-       tag: latest
-     storage:
-       capacity: 10Gi
-   EOF
-   ```
-   Replace `<EXTERNAL-IP>` with the load balancer IP (or `<EXTERNAL-IP>.nip.io` if you used that). Keep the admin user list and ensure you protect the client secret (do not commit it).
 3) Install or upgrade the release (this pulls the latest chart):
    ```bash
    helm upgrade --install jhub jupyterhub/jupyterhub \
