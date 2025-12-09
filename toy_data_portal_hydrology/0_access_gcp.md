@@ -22,12 +22,12 @@ Goal: sign in through CloudBank (using the CloudBank-provided Google account) an
 4) Leave everything else at defaults and click **Create**.
 5) Wait for the cluster status to become **Running** (this can take about 5 minutes). Autopilot handles control plane and worker sizing automatically (roughly one control plane and minimal worker capacity).
 
-## Next: Connect with Cloud Shell
+## Connect with Cloud Shell
 After the cluster is Running, open Cloud Shell by clicking the terminal icon at the very top of the screen labeled **Activate Cloud Shell** (do not use the “Connect” button inside the cluster dashboard). Then run:
 ```bash
 gcloud container clusters get-credentials toy-hydro-cluster --region us-west1
 ```
-Replace the cluster name/region if you used different values.
+Replace the cluster name/region if you used different values. Autopilot launches nodes only when needed, so `kubectl get nodes` here may show none until a workload schedules. Once a workload runs, you will see a node in `Ready` state.
 
 Tip: Cloud Shell includes the Gemini assistant; you can ask it to run `gcloud` and `kubectl` commands on your behalf and parse their output to diagnose problems.
 
