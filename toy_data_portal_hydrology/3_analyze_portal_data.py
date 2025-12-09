@@ -17,9 +17,9 @@
 # %pip install -q requests pandas xarray matplotlib netCDF4
 
 # %%
-PORTAL_BASE = None  # set to http://<EXTERNAL-IP>
+PORTAL_BASE = None  # set to the portal external IP, for example http://35.x.x.x
 LOCAL_NETCDF = None  # optional local fallback
-OUT_PLOT = 'plot.png'
+OUT_PLOT = "plot.png"
 
 # %% [markdown]
 # # 3 - Explore portal data from JupyterHub
@@ -36,7 +36,6 @@ OUT_PLOT = 'plot.png'
 # - `OUT_PLOT`: optional plot output path (default `plot.png`).
 
 # %%
-import os
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -47,14 +46,11 @@ import xarray as xr
 
 # %%
 # Configuration
-PORTAL_BASE = os.environ.get("PORTAL_BASE")
-PORTAL_API = f"{PORTAL_BASE}/api"
-LOCAL_NETCDF = os.environ.get("LOCAL_NETCDF")
-OUT_PLOT = Path(os.environ.get("OUT_PLOT", "plot.png"))
+OUT_PLOT = Path(OUT_PLOT) if not isinstance(OUT_PLOT, Path) else OUT_PLOT
 
 if not PORTAL_BASE and not LOCAL_NETCDF:
     raise SystemExit(
-        "Set PORTAL_BASE to the portal external URL (for example http://34.x.x.x) "
+        "Set PORTAL_BASE to the portal external URL (for example http://35.x.x.x) "
         "or set LOCAL_NETCDF to a local file path."
     )
 
