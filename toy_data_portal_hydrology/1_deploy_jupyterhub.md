@@ -20,8 +20,10 @@ Tip: Cloud Shell includes Gemini; you can ask it to run `gcloud`, `kubectl`, and
    helm repo add jupyterhub https://jupyterhub.github.io/helm-chart/
    helm repo update
    ```
-2) Create a minimal config file for a small demo deployment (replace `your-admin-user` and a strong temporary password):
+2) Create a minimal config file for a small demo deployment. Use your current shell user as admin and generate a temporary password on the fly:
    ```bash
+   export JHUB_ADMIN="${USER}"
+   export JHUB_PASS="$(openssl rand -base64 20)"
    cat <<'EOF' > jhub-config.yaml
    proxy:
      service:
@@ -31,12 +33,12 @@ Tip: Cloud Shell includes Gemini; you can ask it to run `gcloud`, `kubectl`, and
      config:
        JupyterHub:
          admin_users:
-           - your-admin-user
+           - '"${JHUB_ADMIN}"'
 
    auth:
      type: dummy
      dummy:
-       password: "set-a-strong-temp-password"
+       password: "${JHUB_PASS}"
 
    singleuser:
      image:
@@ -46,7 +48,7 @@ Tip: Cloud Shell includes Gemini; you can ask it to run `gcloud`, `kubectl`, and
        capacity: 10Gi
    EOF
    ```
-   Dummy authentication is only for this tutorial; change it before exposing to real users.
+   Dummy authentication is only for this tutorial; change it before exposing to real users. The password generated above is available in `JHUB_PASS` for the session if you need to log in again.
 3) Install or upgrade the release (this pulls the latest chart):
    ```bash
    helm upgrade --install jhub jupyterhub/jupyterhub \
