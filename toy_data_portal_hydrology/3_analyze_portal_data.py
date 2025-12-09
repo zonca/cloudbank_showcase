@@ -16,6 +16,11 @@
 # %%
 # %pip install -q requests pandas xarray matplotlib netCDF4
 
+# %%
+PORTAL_BASE = None  # set to http://<EXTERNAL-IP>
+LOCAL_NETCDF = None  # optional local fallback
+OUT_PLOT = 'plot.png'
+
 # %% [markdown]
 # # 3 - Explore portal data from JupyterHub (script form)
 #
