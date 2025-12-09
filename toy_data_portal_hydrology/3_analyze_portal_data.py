@@ -30,7 +30,7 @@
 # %%
 import os
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -39,12 +39,24 @@ import xarray as xr
 
 # %%
 # Configuration
-PORTAL_BASE = os.environ.get("PORTAL_BASE", "http://<EXTERNAL-IP>").rstrip("/")
+PORTAL_BASE = os.environ.get("PORTAL_BASE")
 PORTAL_API = f"{PORTAL_BASE}/api"
 LOCAL_NETCDF = os.environ.get("LOCAL_NETCDF")
 OUT_PLOT = Path(os.environ.get("OUT_PLOT", "plot.png"))
 
-print(f"Portal base: {PORTAL_BASE}")
+if not PORTAL_BASE and not LOCAL_NETCDF:
+    raise SystemExit(
+        "Set PORTAL_BASE to the portal external URL (for example http://34.x.x.x) "
+        "or set LOCAL_NETCDF to a local file path."
+    )
+
+if PORTAL_BASE:
+    PORTAL_BASE = PORTAL_BASE.rstrip("/")
+    print(f"Portal base: {PORTAL_BASE}")
+    PORTAL_API = f"{PORTAL_BASE}/api"
+else:
+    # Only allowed when LOCAL_NETCDF is provided
+    PORTAL_API = None
 if LOCAL_NETCDF:
     print(f"Local NetCDF override: {LOCAL_NETCDF}")
 
@@ -54,12 +66,13 @@ def list_datasets() -> List[Dict[str, Any]]:
     """Return dataset entries from the portal API, or a local fallback if provided."""
     datasets: List[Dict[str, Any]] = []
     portal_error = None
-    try:
-        resp = requests.get(f"{PORTAL_API}/datasets", timeout=30)
-        resp.raise_for_status()
-        datasets = resp.json().get("datasets", [])
-    except Exception as exc:  # pragma: no cover - best effort
-        portal_error = str(exc)
+    if PORTAL_API:
+        try:
+            resp = requests.get(f"{PORTAL_API}/datasets", timeout=30)
+            resp.raise_for_status()
+            datasets = resp.json().get("datasets", [])
+        except Exception as exc:  # pragma: no cover - best effort
+            portal_error = str(exc)
 
     if portal_error:
         print(f"Portal API error (will fall back to LOCAL_NETCDF if set): {portal_error}")
