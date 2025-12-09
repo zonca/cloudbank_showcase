@@ -30,6 +30,7 @@ proxy:
     type: LoadBalancer
 
 hub:
+  priorityClassName: system-cluster-critical
   config:
     JupyterHub:
       admin_users:
