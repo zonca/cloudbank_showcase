@@ -34,7 +34,11 @@ gcloud storage buckets add-iam-policy-binding "gs://${PORTAL_BUCKET}" \
 gcloud storage buckets add-iam-policy-binding "gs://${PORTAL_BUCKET}" \
   --member="serviceAccount:portal-gsa@${PROJECT_ID}.iam.gserviceaccount.com" \
   --role="roles/storage.objectViewer"
+gcloud storage buckets add-iam-policy-binding "gs://${PORTAL_BUCKET}" \
+  --member="allUsers" \
+  --role="roles/storage.objectViewer"
 ```
+The public read grant above lets notebooks download objects without extra credentials. If you prefer to keep the bucket private, skip the `allUsers` binding and download with authenticated tools instead.
 
 ## Deploy
 2) Save the manifest using that bucket name. Important: the final `EOF` line must start at column 1 (no spaces) or the shell will keep showing `>` waiting for input.
@@ -106,7 +110,7 @@ curl "http://${PORTAL_IP}/healthz"
 Expected `healthz` output: `{"status":"ok"}`. Opening `http://<EXTERNAL-IP>/` in a browser shows the portal landing page and upload form:
 ![Portal upload form](img/portal-upload-empty.png)
 
-After uploading a NetCDF file, the dataset list and size appear:
+Download one of the sample NetCDF files listed in `README.md` (for example the RouteLink file), upload it through the form, and compare what you see with the screenshots to confirm the file is present:
 ![Portal upload list](img/portal-upload-list.png)
 
 Clicking a dataset shows extracted metadata:
