@@ -19,7 +19,6 @@
 # %%
 PORTAL_BASE = "http://136.117.247.219"  # set to the portal external IP for this tutorial
 LOCAL_NETCDF = None  # optional local fallback
-OUT_PLOT = "plot.png"
 
 # %% [markdown]
 # # 3 - Explore portal data from JupyterHub
@@ -33,7 +32,7 @@ OUT_PLOT = "plot.png"
 # Configure at the top of the notebook:
 # - `PORTAL_BASE`: required unless `LOCAL_NETCDF` is set (use the external IP of the portal service, for example `http://35.x.x.x`).
 # - `LOCAL_NETCDF`: optional local NetCDF path to skip the portal download.
-# - `OUT_PLOT`: optional plot output path (default `plot.png`).
+# - Plot is saved to `plot.png` in the working directory.
 
 # %%
 from pathlib import Path
@@ -46,7 +45,6 @@ import xarray as xr
 
 # %%
 # Configuration
-OUT_PLOT = Path("plot.png")
 
 if not PORTAL_BASE and not LOCAL_NETCDF:
     raise SystemExit(
@@ -179,4 +177,4 @@ def main():
     print(f"Selected dataset: {selected.get('id')}")
     local_path = download_dataset(selected)
     ds = inspect_dataset(local_path)
-    plot_sample(ds, OUT_PLOT)
+    plot_sample(ds, Path("plot.png"))
