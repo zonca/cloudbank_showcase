@@ -171,10 +171,9 @@ def plot_sample(ds: xr.Dataset, output: Path) -> Path:
 
 
 # %%
-def main():
-    datasets, portal_error = list_datasets()
-    selected = choose_dataset(datasets, portal_error)
-    print(f"Selected dataset: {selected.get('id')}")
-    local_path = download_dataset(selected)
-    ds = inspect_dataset(local_path)
-    plot_sample(ds, Path("plot.png"))
+datasets, portal_error = list_datasets()
+selected = choose_dataset(datasets, portal_error)
+print(f"Selected dataset: {selected.get('id')}")
+local_path = download_dataset(selected)
+ds = inspect_dataset(local_path)
+plot_sample(ds, Path("plot.png"))
