@@ -13,6 +13,9 @@
 #     name: python3
 # ---
 
+# %%
+# %pip install -q requests pandas xarray matplotlib netCDF4
+
 # %% [markdown]
 # # 3 - Explore portal data from JupyterHub (script form)
 #
