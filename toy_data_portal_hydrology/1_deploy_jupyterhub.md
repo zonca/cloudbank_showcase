@@ -30,7 +30,6 @@ proxy:
     type: LoadBalancer
 
 hub:
-  priorityClassName: system-cluster-critical
   config:
     JupyterHub:
       admin_users:
@@ -54,6 +53,8 @@ singleuser:
 scheduling:
   userScheduler:
     enabled: false
+  podPriority:
+    enabled: true
 EOF
 ```
 Notes:
