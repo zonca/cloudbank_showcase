@@ -66,10 +66,10 @@ if LOCAL_NETCDF:
 
 
 # %%
-def list_datasets() -> List[Dict[str, Any]]:
+def list_datasets() -> tuple[List[Dict[str, Any]], str | None]:
     """Return dataset entries from the portal API, or a local fallback if provided."""
     datasets: List[Dict[str, Any]] = []
-    portal_error = None
+    portal_error: str | None = None
     if PORTAL_API:
         try:
             resp = requests.get(f"{PORTAL_API}/datasets", timeout=30)
@@ -95,13 +95,19 @@ def list_datasets() -> List[Dict[str, Any]]:
     print(f"Found {len(datasets)} dataset entries")
     if datasets:
         print(pd.DataFrame(datasets)[["id", "format", "bytes", "location"]].head())
-    return datasets
+    return datasets, portal_error
 
 
 # %%
-def choose_dataset(entries: List[Dict[str, Any]]) -> Dict[str, Any]:
+def choose_dataset(entries: List[Dict[str, Any]], portal_error: str | None = None) -> Dict[str, Any]:
     if not entries:
-        raise ValueError("No datasets available. Upload a NetCDF file first.")
+        msg = "No datasets available. Upload a NetCDF file first."
+        if portal_error:
+            msg += (
+                f" The portal API was unreachable/erroring: {portal_error}. "
+                "If the portal is down, set LOCAL_NETCDF to a local file path to proceed."
+            )
+        raise ValueError(msg)
     for item in entries:
         fmt = (item.get("format") or "").lower()
         if "netcdf" in fmt or str(item.get("id", "")).endswith(".nc"):
@@ -168,14 +174,9 @@ def plot_sample(ds: xr.Dataset, output: Path) -> Path:
 
 # %%
 def main():
-    datasets = list_datasets()
-    selected = choose_dataset(datasets)
+    datasets, portal_error = list_datasets()
+    selected = choose_dataset(datasets, portal_error)
     print(f"Selected dataset: {selected.get('id')}")
     local_path = download_dataset(selected)
     ds = inspect_dataset(local_path)
     plot_sample(ds, OUT_PLOT)
-
-
-# %%
-if __name__ == "__main__":
-    main()
