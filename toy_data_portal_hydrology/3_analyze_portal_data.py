@@ -46,7 +46,7 @@ import xarray as xr
 
 # %%
 # Configuration
-OUT_PLOT = Path(OUT_PLOT) if not isinstance(OUT_PLOT, Path) else OUT_PLOT
+OUT_PLOT = Path("plot.png")
 
 if not PORTAL_BASE and not LOCAL_NETCDF:
     raise SystemExit(
