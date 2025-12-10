@@ -1,30 +1,19 @@
 # Toy Data Portal for Hydrology
 
-This repository walks you through a short, end-to-end tutorial to stand up a toy data portal and a demo JupyterHub on Google Kubernetes Engine (GKE) Autopilot using a CloudBank-provided Google Cloud project.
+This tutorial shows how to spin up a small cloud setup in Google Cloud that mimics a real hydrology workspace. You start with a managed Kubernetes cluster, add JupyterHub for notebooks, and finish with a simple data portal that stores and previews NetCDF files. Each piece is optional—pick the parts you need.
 
-## What you build
-- A small FastHTML-based portal that uploads NetCDF files to Google Cloud Storage and exposes extracted metadata via a web UI and JSON API.
-- A JupyterHub deployment (Zero to JupyterHub Helm chart) that can reach the portal API for simple data exploration notebooks.
-- A minimal GKE Autopilot cluster and bucket configured with Workload Identity.
+## What you build (in plain terms)
+- A tiny Kubernetes cluster (GKE Autopilot) that Google scales for you—no node sizing needed.
+- JupyterHub so students or teammates can open notebooks in the browser without installing anything locally.
+- A toy data portal that uploads NetCDF files to Cloud Storage and shows basic metadata and plots.
 
-## Quick tutorial flow
-1) **Access GCP via CloudBank and create the cluster** (`1_access_gcp.md`)
-   - Log in to the Google Cloud Console with the CloudBank-issued account.
-   - Enable Kubernetes Engine, create an Autopilot cluster (e.g., `toy-hydro-cluster` in `us-west1`), and connect from Cloud Shell with `gcloud container clusters get-credentials ...`.
-   - Verify access by running a sample Deployment and confirming a node appears.
+## How to follow along
+1) **Start the cluster** (`1_access_gcp.md`): Log in with the CloudBank-provided Google account, enable Kubernetes Engine, and create a small Autopilot cluster. You’ll verify it by running a sample app.
+2) **Add JupyterHub** (`2_deploy_jupyterhub.md`): Install JupyterHub on that cluster so users get a ready-to-go notebook environment.
+3) **Add the data portal** (`3_deploy_portal.md`): Deploy the toy portal to the cluster, connect it to a Cloud Storage bucket, and upload a sample NetCDF file to see extracted metadata.
+4) **Try the notebook** (`4_analyze_portal_data.ipynb`): Run this inside JupyterHub to call the portal’s API, pull down a NetCDF file, and make a quick plot. Screenshots live in `img/`.
 
-2) **Deploy JupyterHub** (`2_deploy_jupyterhub.md`)
-   - In Cloud Shell, add the JupyterHub Helm repo, create the `jhub` namespace, and generate a minimal config that uses DummyAuthenticator.
-   - Install/upgrade the release with Helm; wait for the pods to become Ready.
-   - Expose JupyterHub via the `proxy-public` LoadBalancer service and optionally enable HTTPS with a self-signed certificate.
-
-3) **Deploy the toy data portal** (`3_deploy_portal.md`)
-   - Create a Cloud Storage bucket and a Google service account, bind it to the `portal-sa` Kubernetes service account via Workload Identity, and grant storage access.
-   - Apply the provided `portal.yaml` manifest to deploy the portal and expose it with a LoadBalancer service.
-   - Hit `/healthz` to verify the service, then upload a sample NetCDF file and view the extracted metadata.
-
-4) **Explore data via the notebook** (`4_analyze_portal_data.ipynb`)
-   - Run inside the JupyterHub you deployed in step 2.
-   - Demonstrates querying the portal API from step 3, retrieving a NetCDF file, and plotting results.
-   - Screenshots for comparison are under `img/`.
-   - Useful as a template for students to adapt to their own datasets once the portal is up.
+## Choose your own path
+- Only need notebooks? Do steps 1–2.
+- Only want the portal demo? Do steps 1 and 3.
+- Want the full experience? Do all four steps.
