@@ -94,11 +94,11 @@ kubectl -n jhub get pods -w
    NAME           TYPE           CLUSTER-IP    EXTERNAL-IP    PORT(S)        AGE
    proxy-public   LoadBalancer   10.0.32.123   34.82.10.20    80:30590/TCP   2m
    ```
-2) Enable HTTPS with a self-signed cert (required for this walkthrough). This adds TLS at the JupyterHub proxy. Browsers will warn about the certificate, but traffic is encrypted end-to-end.
+2) Enable HTTPS with a self-signed cert (required for this walkthrough). This encrypts traffic and makes authentication safer; browsers will warn about the certificate because it’s self-signed.
 ```bash
-# 1) Capture the load balancer IP and mint a short-lived cert for <IP>.nip.io
+# 1) Capture the load balancer IP and mint a short-lived cert for that IP
 LB_IP="$(kubectl -n jhub get svc proxy-public -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
-export JHUB_HOST="${LB_IP}.nip.io"
+export JHUB_HOST="${LB_IP}"
 openssl req -x509 -nodes -newkey rsa:2048 -days 7 \
   -keyout tls.key -out tls.crt -subj "/CN=${JHUB_HOST}"
 
