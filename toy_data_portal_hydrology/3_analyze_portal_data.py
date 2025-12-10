@@ -26,7 +26,7 @@ LOCAL_NETCDF = None  # optional local fallback
 # What this does:
 # - Lists datasets from the toy data portal API.
 # - Falls back to a local NetCDF if `LOCAL_NETCDF` is set or the portal is unreachable.
-# - Downloads the chosen file (if not local), opens it with xarray, prints metadata, and saves a quick plot.
+# - Downloads the chosen file (if not local), opens it with xarray, prints metadata, and saves a quick 2D scatter plot (lat/lon colored by a data variable).
 # - Kept in sync with the notebook via Jupytext (`ipynb` and `py:percent`).
 #
 # Configure at the top of the notebook:
@@ -147,18 +147,33 @@ def inspect_dataset(path: Path) -> xr.Dataset:
 
 # %%
 def plot_sample(ds: xr.Dataset, output: Path) -> Path:
+    """Make a small, colorful 2D scatter using lat/lon and a numeric variable."""
     numeric_vars = [name for name, da in ds.data_vars.items() if getattr(da, "dtype", None) and da.dtype.kind in "if"]
     if not numeric_vars:
         raise ValueError("No numeric variables found to plot.")
     var = numeric_vars[0]
     da = ds[var]
-    sliced = da
-    for dim in da.dims:
-        sliced = sliced.isel({dim: slice(0, min(50, da.sizes[dim]))})
-    squeezed = sliced.squeeze()
 
-    ax = squeezed.plot(figsize=(8, 4))
-    plt.title(f"Sample of '{var}'")
+    if "lat" in ds and "lon" in ds and "feature_id" in da.dims:
+        n = min(5000, da.sizes.get("feature_id", 0))
+        lat = ds["lat"].isel(feature_id=slice(0, n)).values
+        lon = ds["lon"].isel(feature_id=slice(0, n)).values
+        vals = da.isel(feature_id=slice(0, n)).values
+        plt.figure(figsize=(8, 6))
+        sc = plt.scatter(lon, lat, c=vals, cmap="viridis", s=3, linewidths=0)
+        plt.colorbar(sc, label=var)
+        plt.xlabel("Longitude")
+        plt.ylabel("Latitude")
+        plt.title(f"{var} sample (first {n} points)")
+    else:
+        # Fallback to a 1D slice if lat/lon are not present
+        sliced = da
+        for dim in da.dims:
+            sliced = sliced.isel({dim: slice(0, min(50, da.sizes[dim]))})
+        squeezed = sliced.squeeze()
+        ax = squeezed.plot(figsize=(8, 4))
+        plt.title(f"Sample of '{var}'")
+
     plt.tight_layout()
     output.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(output)
