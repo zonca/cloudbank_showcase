@@ -21,7 +21,7 @@ PORTAL_BASE = "http://toy-portal.portal.svc.cluster.local"  # set to portal serv
 LOCAL_NETCDF = None  # optional local fallback
 
 # %% [markdown]
-# # 3 - Explore portal data from JupyterHub
+# # 4 - Explore portal data from JupyterHub
 #
 # What this does:
 # - Lists datasets from the toy data portal API.

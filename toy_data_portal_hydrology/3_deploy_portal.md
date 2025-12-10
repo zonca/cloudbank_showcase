@@ -1,4 +1,4 @@
-# 2 - Build and deploy the toy data portal container
+# 3 - Build and deploy the toy data portal container
 
 Goal: deploy the Python-based toy data portal web app container to the Google Kubernetes Engine (GKE) Autopilot cluster from step 0. The portal is a roughly 400-line prototype that demonstrates the minimal features of a data portal experience. The image is published to the GitHub Container Registry (GHCR) and the repository is public, so no pull secret is needed.
 
