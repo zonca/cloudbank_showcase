@@ -1,6 +1,6 @@
 # 2 - Build and deploy the toy data portal container
 
-Goal: deploy the Python-based toy data portal web app container to the Google Kubernetes Engine (GKE) Autopilot cluster from step 0. The image is published to the GitHub Container Registry (GHCR) and the repository is public, so no pull secret is needed.
+Goal: deploy the Python-based toy data portal web app container to the Google Kubernetes Engine (GKE) Autopilot cluster from step 0. The portal is a roughly 400-line prototype that demonstrates the minimal features of a data portal experience. The image is published to the GitHub Container Registry (GHCR) and the repository is public, so no pull secret is needed.
 
 For app details (upload flow to Google Cloud Storage, required environment variables, local development, tests, and the continuous integration workflow), see the repository README: https://github.com/zonca/cloudbank_toy_data_portal.
 
@@ -34,13 +34,6 @@ gcloud storage buckets add-iam-policy-binding "gs://${PORTAL_BUCKET}" \
 gcloud storage buckets add-iam-policy-binding "gs://${PORTAL_BUCKET}" \
   --member="serviceAccount:portal-gsa@${PROJECT_ID}.iam.gserviceaccount.com" \
   --role="roles/storage.objectCreator"
-gcloud storage buckets add-iam-policy-binding "gs://${PORTAL_BUCKET}" \
-  --member="serviceAccount:portal-gsa@${PROJECT_ID}.iam.gserviceaccount.com" \
-  --role="roles/storage.objectViewer"
-gcloud storage buckets add-iam-policy-binding "gs://${PORTAL_BUCKET}" \
-  --member="allUsers" \
-  --role="roles/storage.objectViewer"
-# (Duplicate IAM policy binding removed)
 ```
 The public read grant above lets notebooks download objects without extra credentials. If you prefer to keep the bucket private, skip the `allUsers` binding and download with authenticated tools instead.
 
