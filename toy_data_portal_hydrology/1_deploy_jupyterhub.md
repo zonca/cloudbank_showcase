@@ -94,7 +94,37 @@ kubectl -n jhub get pods -w
    NAME           TYPE           CLUSTER-IP    EXTERNAL-IP    PORT(S)        AGE
    proxy-public   LoadBalancer   10.0.32.123   34.82.10.20    80:30590/TCP   2m
    ```
-2) Open `http://<EXTERNAL-IP>/` in your browser. To remember the credentials you generated earlier, print them in Cloud Shell:
+2) Enable HTTPS with a self-signed cert (required for this walkthrough). This adds TLS at the JupyterHub proxy. Browsers will warn about the certificate, but traffic is encrypted end-to-end.
+```bash
+# 1) Capture the load balancer IP and mint a short-lived cert for <IP>.nip.io
+LB_IP="$(kubectl -n jhub get svc proxy-public -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
+export JHUB_HOST="${LB_IP}.nip.io"
+openssl req -x509 -nodes -newkey rsa:2048 -days 7 \
+  -keyout tls.key -out tls.crt -subj "/CN=${JHUB_HOST}"
+
+# 2) Store the cert as a TLS secret the chart can read
+kubectl -n jhub delete secret jhub-selfsigned --ignore-not-found
+kubectl -n jhub create secret tls jhub-selfsigned --key tls.key --cert tls.crt
+
+# 3) Create a small overlay file enabling HTTPS and rerun Helm
+cat > https-selfsigned.yaml <<EOF
+proxy:
+  https:
+    enabled: true
+    type: secret
+    hosts:
+      - ${JHUB_HOST}
+    secret:
+      name: jhub-selfsigned
+EOF
+
+helm upgrade --install jhub jupyterhub/jupyterhub \
+  --namespace jhub \
+  --values jhub-config.yaml \
+  --values https-selfsigned.yaml
+```
+
+3) Open `https://${JHUB_HOST}/` in your browser. To remember the credentials you generated earlier, print them in Cloud Shell:
    ```bash
    echo "User: ${JHUB_ADMIN}"
    echo "Pass: ${JHUB_PASS}"
