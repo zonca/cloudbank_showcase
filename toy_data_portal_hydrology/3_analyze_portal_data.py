@@ -17,7 +17,7 @@
 # %pip install -q requests pandas xarray matplotlib netCDF4
 
 # %%
-PORTAL_BASE = "http://toy-portal.portal.svc.cluster.local"  # in-cluster service DNS; replace with external IP if accessing from outside
+PORTAL_BASE = "http://toy-portal.portal.svc.cluster.local"  # set to portal service (in-cluster DNS or external IP)
 LOCAL_NETCDF = None  # optional local fallback
 
 # %% [markdown]
@@ -35,6 +35,7 @@ LOCAL_NETCDF = None  # optional local fallback
 # - Plot is saved to `plot.png` in the working directory.
 
 # %%
+import os
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -45,12 +46,7 @@ import xarray as xr
 
 # %%
 # Configuration
-
-if not PORTAL_BASE and not LOCAL_NETCDF:
-    raise SystemExit(
-        "Set PORTAL_BASE to the portal external URL (for example http://35.x.x.x) "
-        "or set LOCAL_NETCDF to a local file path."
-    )
+LOCAL_NETCDF = os.environ.get("LOCAL_NETCDF", LOCAL_NETCDF)
 
 if LOCAL_NETCDF:
     # Local file overrides portal API lookups
@@ -61,7 +57,9 @@ elif PORTAL_BASE:
     print(f"Portal base: {PORTAL_BASE}")
     PORTAL_API = f"{PORTAL_BASE}/api"
 else:
-    PORTAL_API = None
+    raise SystemExit(
+        "Set LOCAL_NETCDF to a local file path, or set PORTAL_BASE to the portal URL (for example http://35.x.x.x)."
+    )
 
 
 # %%
@@ -148,24 +146,28 @@ def inspect_dataset(path: Path) -> xr.Dataset:
 
 # %%
 def plot_sample(ds: xr.Dataset, output: Path) -> Path:
-    """Make a small, colorful 2D scatter using lat/lon and a numeric variable."""
-    numeric_vars = [name for name, da in ds.data_vars.items() if getattr(da, "dtype", None) and da.dtype.kind in "if"]
-    if not numeric_vars:
-        raise ValueError("No numeric variables found to plot.")
-    var = numeric_vars[0]
+    """Make a small, colorful 2D scatter using lat/lon and a meaningful variable."""
+    preferred = ["So", "TopWdth", "TopWdthCC", "order", "Qi", "nCC"]
+    var = next((v for v in preferred if v in ds), None)
+    if not var:
+        # fallback to first numeric
+        numeric_vars = [name for name, da in ds.data_vars.items() if getattr(da, "dtype", None) and da.dtype.kind in "if"]
+        if not numeric_vars:
+            raise ValueError("No numeric variables found to plot.")
+        var = numeric_vars[0]
     da = ds[var]
 
     if "lat" in ds and "lon" in ds and "feature_id" in da.dims:
-        n = min(5000, da.sizes.get("feature_id", 0))
+        n = min(50000, da.sizes.get("feature_id", 0))
         lat = ds["lat"].isel(feature_id=slice(0, n)).values
         lon = ds["lon"].isel(feature_id=slice(0, n)).values
         vals = da.isel(feature_id=slice(0, n)).values
-        plt.figure(figsize=(8, 6))
-        sc = plt.scatter(lon, lat, c=vals, cmap="viridis", s=3, linewidths=0)
+        plt.figure(figsize=(9, 6))
+        sc = plt.scatter(lon, lat, c=vals, cmap="viridis", s=2, linewidths=0)
         plt.colorbar(sc, label=var)
         plt.xlabel("Longitude")
         plt.ylabel("Latitude")
-        plt.title(f"{var} sample (first {n} points)")
+        plt.title(f"{var} (first {n} points)")
     else:
         # Fallback to a 1D slice if lat/lon are not present
         sliced = da
