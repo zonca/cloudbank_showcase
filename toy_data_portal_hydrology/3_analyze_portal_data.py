@@ -52,15 +52,16 @@ if not PORTAL_BASE and not LOCAL_NETCDF:
         "or set LOCAL_NETCDF to a local file path."
     )
 
-if PORTAL_BASE:
+if LOCAL_NETCDF:
+    # Local file overrides portal API lookups
+    PORTAL_API = None
+    print(f"Local NetCDF override: {LOCAL_NETCDF}")
+elif PORTAL_BASE:
     PORTAL_BASE = PORTAL_BASE.rstrip("/")
     print(f"Portal base: {PORTAL_BASE}")
     PORTAL_API = f"{PORTAL_BASE}/api"
 else:
-    # Only allowed when LOCAL_NETCDF is provided
     PORTAL_API = None
-if LOCAL_NETCDF:
-    print(f"Local NetCDF override: {LOCAL_NETCDF}")
 
 
 # %%
