@@ -1,0 +1,5 @@
+# Ignore NetCDF files
+*.nc
+
+# Ignore PNG images
+*.png
