@@ -1,4 +1,4 @@
-# 1 - Deploy JupyterHub with the Zero to JupyterHub chart
+# 2 - Deploy JupyterHub with the Zero to JupyterHub chart
 
 Goal: install JupyterHub on the GKE Autopilot cluster created in step 0, using the official Helm chart from the Zero to JupyterHub project.
 
