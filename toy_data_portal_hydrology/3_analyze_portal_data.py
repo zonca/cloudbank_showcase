@@ -43,6 +43,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import requests
 import xarray as xr
+import numpy as np
 
 # %%
 # Configuration
@@ -158,16 +159,22 @@ def plot_sample(ds: xr.Dataset, output: Path) -> Path:
     da = ds[var]
 
     if "lat" in ds and "lon" in ds and "feature_id" in da.dims:
-        n = min(50000, da.sizes.get("feature_id", 0))
+        n = min(75000, da.sizes.get("feature_id", 0))
         lat = ds["lat"].isel(feature_id=slice(0, n)).values
         lon = ds["lon"].isel(feature_id=slice(0, n)).values
         vals = da.isel(feature_id=slice(0, n)).values
-        plt.figure(figsize=(9, 6))
-        sc = plt.scatter(lon, lat, c=vals, cmap="viridis", s=2, linewidths=0)
-        plt.colorbar(sc, label=var)
+        mask = np.isfinite(lat) & np.isfinite(lon) & np.isfinite(vals)
+        lat, lon, vals = lat[mask], lon[mask], vals[mask]
+        if vals.size == 0:
+            raise ValueError("No finite values to plot.")
+        vmin = np.nanpercentile(vals, 2)
+        vmax = np.nanpercentile(vals, 98)
+        plt.figure(figsize=(10, 7))
+        sc = plt.scatter(lon, lat, c=vals, cmap="plasma", s=2, linewidths=0, vmin=vmin, vmax=vmax)
+        plt.colorbar(sc, label=f"{var} (clipped 2–98th pct)")
         plt.xlabel("Longitude")
         plt.ylabel("Latitude")
-        plt.title(f"{var} (first {n} points)")
+        plt.title(f"{var} across reaches (first {n} points)")
     else:
         # Fallback to a 1D slice if lat/lon are not present
         sliced = da
