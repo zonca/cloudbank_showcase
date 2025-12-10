@@ -40,6 +40,7 @@ gcloud storage buckets add-iam-policy-binding "gs://${PORTAL_BUCKET}" \
 gcloud storage buckets add-iam-policy-binding "gs://${PORTAL_BUCKET}" \
   --member="allUsers" \
   --role="roles/storage.objectViewer"
+# (Duplicate IAM policy binding removed)
 ```
 The public read grant above lets notebooks download objects without extra credentials. If you prefer to keep the bucket private, skip the `allUsers` binding and download with authenticated tools instead.
 
