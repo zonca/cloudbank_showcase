@@ -1,4 +1,4 @@
-# 0 - Access CloudBank and Google Cloud Console
+# 1 - Access CloudBank and Google Cloud Console
 
 Goal: sign in through CloudBank (using the CloudBank-provided Google account) and land in the Google Cloud Console so we can create a GKE Autopilot cluster that will automatically scale nodes based on workload needs.
 
