@@ -107,6 +107,39 @@ kubectl -n jhub get pods -w
    ```
    Sign in with any username and that password (the admin username you listed will have admin rights inside JupyterHub).
 
+### Optional: quick HTTPS with a self-signed cert
+This adds TLS at the JupyterHub proxy. Browsers will warn about the certificate, but traffic is encrypted end-to-end.
+```bash
+# 1) Capture the load balancer IP and mint a short-lived cert for <IP>.nip.io
+LB_IP="$(kubectl -n jhub get svc proxy-public -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
+export JHUB_HOST="${LB_IP}.nip.io"
+openssl req -x509 -nodes -newkey rsa:2048 -days 7 \
+  -keyout tls.key -out tls.crt -subj "/CN=${JHUB_HOST}"
+
+# 2) Store the cert as a TLS secret the chart can read
+kubectl -n jhub delete secret jhub-selfsigned --ignore-not-found
+kubectl -n jhub create secret tls jhub-selfsigned --key tls.key --cert tls.crt
+
+# 3) Create a small overlay file enabling HTTPS and rerun Helm
+cat > https-selfsigned.yaml <<EOF
+proxy:
+  https:
+    enabled: true
+    type: secret
+    hosts:
+      - ${JHUB_HOST}
+    secret:
+      name: jhub-selfsigned
+EOF
+
+helm upgrade --install jhub jupyterhub/jupyterhub \
+  --namespace jhub \
+  --values jhub-config.yaml \
+  --values https-selfsigned.yaml
+
+echo "Open: https://${JHUB_HOST}/"
+```
+
 ## Clean up (optional)
 To remove the demo deployment:
 ```bash
