@@ -28,6 +28,7 @@ LOCAL_NETCDF = None  # optional local fallback
 # - Falls back to a local NetCDF if `LOCAL_NETCDF` is set or the portal is unreachable.
 # - Downloads the chosen file (if not local), opens it with xarray, prints metadata, and saves a quick 2D scatter plot (lat/lon colored by a data variable).
 # - Kept in sync with the notebook via Jupytext (`ipynb` and `py:percent`).
+# - Executed notebook output: https://gist.github.com/zonca/110eface6429e7b91160f893c214417c
 #
 # Configure at the top of the notebook:
 # - `PORTAL_BASE`: required unless `LOCAL_NETCDF` is set (inside the cluster use `http://toy-portal.portal.svc.cluster.local`; from outside use the portal external IP like `http://35.x.x.x`).
