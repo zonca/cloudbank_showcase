@@ -18,7 +18,7 @@ Goal: sign in through CloudBank (using the CloudBank-provided Google account) an
 2) Click **CREATE** and stay with **Autopilot** (recommended for simplicity and guardrails). If you prefer full control over node sizes and costs, click **Switch to Standard cluster** instead.
 3) **Cluster basics (Autopilot)**:
    - Name: `toy-hydro-cluster` (or another short name).
-   - Location type: **Zonal**. Pick a zone close to you (e.g., `us-west1`).
+   - Region: Pick a region close to you from the dropdown menu (e.g., `us-west1`).
 4) Leave everything else at defaults and click **Create**.
 5) Wait for the cluster status to become **Running** (this can take about 5 minutes). Autopilot handles control plane and worker sizing automatically (roughly one control plane and minimal worker capacity).
 
