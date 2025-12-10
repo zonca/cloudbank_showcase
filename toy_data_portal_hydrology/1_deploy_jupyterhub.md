@@ -53,12 +53,6 @@ singleuser:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: portal
-  networkPolicy:
-    egress:
-      - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: portal
 
 scheduling:
   userScheduler:
