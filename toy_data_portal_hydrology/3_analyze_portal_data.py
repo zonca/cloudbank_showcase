@@ -172,7 +172,7 @@ def plot_variable(ds: xr.Dataset, var: str, output: Path) -> Path:
         for dim in da.dims:
             sliced = sliced.isel({dim: slice(0, min(50, da.sizes[dim]))})
         squeezed = sliced.squeeze()
-        ax = squeezed.plot(figsize=(8, 4))
+        squeezed.plot(figsize=(8, 4))
         plt.title(f"Sample of '{var}'")
 
     plt.tight_layout()
