@@ -146,18 +146,9 @@ def inspect_dataset(path: Path) -> xr.Dataset:
 
 
 # %%
-def plot_sample(ds: xr.Dataset, output: Path) -> Path:
-    """Make a small, colorful 2D scatter using lat/lon and a meaningful variable."""
-    preferred = ["So", "TopWdth", "TopWdthCC", "order", "Qi", "nCC"]
-    var = next((v for v in preferred if v in ds), None)
-    if not var:
-        # fallback to first numeric
-        numeric_vars = [name for name, da in ds.data_vars.items() if getattr(da, "dtype", None) and da.dtype.kind in "if"]
-        if not numeric_vars:
-            raise ValueError("No numeric variables found to plot.")
-        var = numeric_vars[0]
+def plot_variable(ds: xr.Dataset, var: str, output: Path) -> Path:
+    """Make a small, colorful 2D scatter using lat/lon for the requested variable."""
     da = ds[var]
-
     if "lat" in ds and "lon" in ds and "feature_id" in da.dims:
         n = min(75000, da.sizes.get("feature_id", 0))
         lat = ds["lat"].isel(feature_id=slice(0, n)).values
@@ -201,4 +192,13 @@ selected = choose_dataset(datasets, portal_error)
 print(f"Selected dataset: {selected.get('id')}")
 local_path = download_dataset(selected)
 ds = inspect_dataset(local_path)
-plot_sample(ds, Path("plot.png"))
+preferred = ["So", "TopWdth", "TopWdthCC", "order", "Qi", "nCC"]
+plotted_any = False
+for var in preferred:
+    if var in ds:
+        plot_variable(ds, var, Path(f"plot_{var.lower()}.png"))
+        plotted_any = True
+if not plotted_any:
+    numeric_vars = [name for name, da in ds.data_vars.items() if getattr(da, "dtype", None) and da.dtype.kind in "if"]
+    if numeric_vars:
+        plot_variable(ds, numeric_vars[0], Path("plot_numeric.png"))
