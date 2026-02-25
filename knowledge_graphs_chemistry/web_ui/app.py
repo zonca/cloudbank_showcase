@@ -52,6 +52,11 @@ def load_sample_query() -> None:
     st.session_state["query"] = DEFAULT_QUERY
 
 
+def prettify_column_names(frame: pd.DataFrame) -> pd.DataFrame:
+    rename_map = {"s": "Subject", "p": "Predicate", "o": "Object"}
+    return frame.rename(columns={col: rename_map.get(col, col) for col in frame.columns})
+
+
 def main() -> None:
     st.set_page_config(page_title="Chemistry Graph Interface", layout="wide")
     st.title("Chemistry Knowledge Graph Interface")
@@ -92,7 +97,7 @@ def main() -> None:
                 st.stop()
 
             data = response.json()
-            frame = parse_bindings(data)
+            frame = prettify_column_names(parse_bindings(data))
             st.dataframe(frame, use_container_width=True)
             with st.expander("Raw JSON"):
                 st.code(json.dumps(data, indent=2)[:6000], language="json")
