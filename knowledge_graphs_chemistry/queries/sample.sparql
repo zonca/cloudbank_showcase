@@ -1,0 +1,5 @@
+PREFIX bio: <http://example.org/bio#>
+SELECT ?compound ?disease WHERE {
+  ?compound bio:treats ?disease .
+}
+LIMIT 10
