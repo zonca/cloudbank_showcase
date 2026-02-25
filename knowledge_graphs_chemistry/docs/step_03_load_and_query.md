@@ -107,7 +107,7 @@ echo "RUNNER_INSTANCE_ID=$RUNNER_INSTANCE_ID"
 
 ### Wait for the runner to be ready
 
-The runner needs a minute to start and register with Systems Manager:
+The runner needs a minute to start and register with Systems Manager. You also need to install Python dependencies:
 
 ```bash
 aws ec2 wait instance-running --region "$AWS_REGION" --instance-ids "$RUNNER_INSTANCE_ID"
@@ -121,9 +121,16 @@ for i in {1..30}; do
   [ "$status" = "Online" ] && break
   sleep 5
 done
+
+# Install dependencies
+aws ssm send-command \
+  --region "$AWS_REGION" \
+  --instance-ids "$RUNNER_INSTANCE_ID" \
+  --document-name AWS-RunShellScript \
+  --parameters "commands=[\"sudo dnf install -y python3-pip\",\"pip3 install boto3 requests\"]"
 ```
 
-When SSM status shows `Online`, the runner is ready.
+When SSM status shows `Online` and dependencies are installed, the runner is ready.
 
 ---
 
