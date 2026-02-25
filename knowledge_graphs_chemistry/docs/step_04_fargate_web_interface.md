@@ -20,7 +20,8 @@ What this automation does:
 1. Builds and pushes a container image to Amazon Elastic Container Registry.
 2. Creates or updates a Fargate service.
 3. Injects `NEPTUNE_ENDPOINT` and region into the app container.
-4. Prints a public URL for the interface.
+4. Waits for service stability and verifies running tasks use the new revision.
+5. Prints a URL for the interface (load balancer DNS if configured, otherwise task public IP).
 
 ## Goal
 
@@ -65,14 +66,23 @@ bash scripts/08_deploy_fargate_web_interface.sh
 Expected final output format:
 
 ```text
+Deploy image tag: <tag>
 Deployment complete
-Service URL: http://<public-ip>:8501
+Service URL: http://<alb-dns-or-public-ip>
 ```
 
 Notes:
 
 - First deploy can take several minutes.
 - Re-running the script updates the running service.
+- The script now uses immutable image tags by default, then also updates `:latest` for convenience.
+- If a deployment mismatch is detected, the script exits with error instead of silently succeeding.
+
+Optional override for image tag:
+
+```bash
+IMAGE_TAG=my-custom-tag bash scripts/08_deploy_fargate_web_interface.sh
+```
 
 ## 3) (Optional) Manual Deployment Outline
 
