@@ -16,7 +16,7 @@ Quick automation route:
 
 Those scripts apply defaults and create most required resources automatically.
 
-Beginner mental model:
+Simple mental model:
 
 - S3 stores files.
 - Neptune is the graph database that will ingest those files.
@@ -211,55 +211,4 @@ bash scripts/07_create_neptune_cluster.sh
 aws neptune wait db-instance-available \
   --db-instance-identifier cloudbank-biobricks-neptune-1 \
   --region us-west-2
-```
-
-## Executed Workflow (This Repo)
-
-The following is an example provisioning sequence with `cloudbank-demo-admin`:
-
-```bash
-export AWS_PROFILE=cloudbank-demo-admin
-
-# 1) Create Neptune loader role
-bash scripts/06_create_neptune_load_role.sh
-
-# 2) Create S3 VPC endpoint (Gateway) in default VPC
-aws ec2 create-vpc-endpoint \
-  --region us-west-2 \
-  --vpc-id vpc-0494869d6d922b9b3 \
-  --vpc-endpoint-type Gateway \
-  --service-name com.amazonaws.us-west-2.s3 \
-  --route-table-ids rtb-0392ef49aa4128843
-
-# 3) Create Neptune subnet group, security group, cluster, instance
-export VPC_ID=vpc-0494869d6d922b9b3
-export SUBNET_IDS=subnet-0fd94f7de59d61f02,subnet-01488d5d68d4786b7
-export NEPTUNE_INGRESS_CIDR=172.31.0.0/16
-bash scripts/07_create_neptune_cluster.sh
-```
-
-Created resources:
-
-- IAM Role: `arn:aws:iam::<account-id>:role/NeptuneLoadFromS3Role`
-- S3 Virtual private cloud endpoint: `vpce-xxxxxxxx`
-- Neptune subnet group: `neptune-demo-subnet-group`
-- Neptune security group: `sg-xxxxxxxx`
-- Neptune cluster: `cloudbank-biobricks-neptune`
-- Neptune instance: `cloudbank-biobricks-neptune-1` (`db.t3.medium`)
-- Neptune endpoint: `cloudbank-biobricks-neptune.cluster-xxxxxxxx.us-west-2.neptune.amazonaws.com`
-
-Status check commands:
-
-```bash
-aws neptune describe-db-clusters \
-  --db-cluster-identifier cloudbank-biobricks-neptune \
-  --region us-west-2 \
-  --query 'DBClusters[0].{Endpoint:Endpoint,Status:Status}' \
-  --output json
-
-aws neptune describe-db-instances \
-  --db-instance-identifier cloudbank-biobricks-neptune-1 \
-  --region us-west-2 \
-  --query 'DBInstances[0].{Status:DBInstanceStatus,Class:DBInstanceClass}' \
-  --output json
 ```

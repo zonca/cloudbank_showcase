@@ -307,4 +307,4 @@ ensure both are true:
 2. STS endpoint exists in VPC:
    - `com.amazonaws.us-west-2.sts` (Interface endpoint with private DNS)
 
-This is a common beginner pitfall in private VPC deployments.
+This is a common pitfall in private VPC deployments.

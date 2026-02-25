@@ -5,8 +5,7 @@
 Biomedical research produces enormous amounts of data — compounds, diseases, gene targets, side effects — scattered across thousands of papers and databases.
 A **knowledge graph** is a way to pull all of those scattered facts into a single, queryable network so you can ask questions like *"Which compounds treat disease X?"* or *"What side effects are linked to molecule Y?"* without writing custom code for every new question.
 
-This step-by-step tutorial shows you how to stand up a real knowledge graph on Amazon Web Services (AWS), starting from zero.
-No prior experience with graph databases or AWS is required.
+This step-by-step tutorial shows how to stand up a real knowledge graph on Amazon Web Services (AWS), starting from a clean account setup.
 
 ## What You Will Build
 
@@ -22,7 +21,7 @@ The result is a working demo you can extend with your own data or a web front-en
 
 ---
 
-## Key Concepts for Beginners
+## Key Concepts
 
 ### What is a knowledge graph?
 
@@ -103,13 +102,23 @@ Create the networking and database resources in your AWS account.
 
 ### Step 3 — Load Data and Run Queries
 
-Download OREGANO, upload it to S3, bulk-load it into Neptune, and run your first SPARQL queries.
+Download OREGANO, upload it to S3, bulk-load it into Neptune, and validate SPARQL queries.
 
 - Download the OREGANO `.ttl` file and upload it to your S3 bucket
 - Trigger the Neptune bulk loader and monitor progress
 - Execute sample SPARQL queries to explore compound–disease relationships
 
 **Guide:** [docs/step_03_load_and_query.md](docs/step_03_load_and_query.md)
+
+### Step 4 — Deploy The Web Interface
+
+Deploy a browser-based interface on Fargate so users can run SPARQL without local scripts.
+
+- Build and push the Streamlit container image
+- Create or update the Fargate service
+- Validate browser query execution
+
+**Guide:** [docs/step_04_fargate_web_interface.md](docs/step_04_fargate_web_interface.md)
 
 ---
 
@@ -134,13 +143,13 @@ Step 3 explains how to set up this in-network runner.
 
 ---
 
-## AWS Services Used
+## Amazon Web Services Used
 
 | Service | Purpose |
 |---|---|
 | **Amazon S3** | Stores the raw RDF data files |
 | **Amazon Neptune** | Managed graph database that ingests and queries the data |
-| **Amazon EC2** | In-VPC compute instance for running queries against Neptune |
+| **Amazon EC2** | In-network compute instance for running queries against Neptune |
 
 ---
 
@@ -151,7 +160,7 @@ The goal here is to demonstrate a practical, minimal path — upload RDF data to
 
 ## Future Extensions
 
-- **Web interface** — deploy a Streamlit app on AWS Fargate so non-technical users can explore the graph through a browser.
+- **Secure web access** — place the Fargate service behind an Application Load Balancer with HTTPS.
 - **Serverless API** — expose SPARQL queries through AWS Lambda and API Gateway for programmatic access.
 
 ---
@@ -168,15 +177,21 @@ knowledge_graphs_chemistry/
 │   ├── step_01_aws_auth.md    ← Step 1 guide
 │   ├── step_02_neptune_setup.md ← Step 2 guide
 │   ├── step_03_load_and_query.md ← Step 3 guide
-│   └── (no separate validation file)
+│   └── step_04_fargate_web_interface.md ← Step 4 guide
 ├── queries/
 │   └── sample.sparql          ← example SPARQL query
-└── scripts/
+├── scripts/
     ├── 01_download_oregano.sh
     ├── 02_upload_to_s3.sh
     ├── 03_start_neptune_loader.py
     ├── 04_check_loader.py
     ├── 05_query_sparql.py
     ├── 06_create_neptune_load_role.sh
-    └── 07_create_neptune_cluster.sh
+    ├── 07_create_neptune_cluster.sh
+    ├── 08_deploy_fargate_web_interface.sh
+    └── 09_destroy_fargate_web_interface.sh
+└── web_ui/
+    ├── app.py
+    ├── Dockerfile
+    └── requirements.txt
 ```
