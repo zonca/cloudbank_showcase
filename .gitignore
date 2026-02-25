@@ -3,3 +3,21 @@
 
 # Ignore PNG images
 *.png
+
+# Local env/config artifacts
+.env
+
+# Python cache/build artifacts
+__pycache__/
+*.py[cod]
+
+# Knowledge Graphs chemistry tutorial local artifacts
+knowledge_graphs_chemistry/.env
+knowledge_graphs_chemistry/.venv/
+knowledge_graphs_chemistry/.tools/
+knowledge_graphs_chemistry/data/
+knowledge_graphs_chemistry/**/__pycache__/
+knowledge_graphs_chemistry/CloudBank_BioBricks_Showcase_Plan.md
+
+# Other local planning notes
+cloud_analysis_seismology/PLAN.md
