@@ -52,6 +52,8 @@ else
   echo "S3 VPC endpoint exists: ${S3_ENDPOINT_ID}"
 fi
 
+IFS=',' read -r -a SUBNET_ARRAY <<< "${SUBNET_IDS}"
+
 STS_ENDPOINT_ID="$(aws ec2 describe-vpc-endpoints \
   --region "${AWS_REGION}" \
   --filters Name=vpc-id,Values="${VPC_ID}" Name=service-name,Values="com.amazonaws.${AWS_REGION}.sts" \
@@ -89,8 +91,6 @@ if [[ -z "${STS_ENDPOINT_ID}" || "${STS_ENDPOINT_ID}" == "None" ]]; then
 else
   echo "STS VPC endpoint exists: ${STS_ENDPOINT_ID}"
 fi
-
-IFS=',' read -r -a SUBNET_ARRAY <<< "${SUBNET_IDS}"
 
 if ! aws neptune describe-db-subnet-groups --db-subnet-group-name "${NEPTUNE_SUBNET_GROUP}" --region "${AWS_REGION}" >/dev/null 2>&1; then
   aws neptune create-db-subnet-group \
