@@ -10,7 +10,7 @@ from botocore.auth import SigV4Auth
 from botocore.credentials import ReadOnlyCredentials
 
 
-def get_env(name: str, required: bool = True, default: str | None = None) -> str:
+def get_env(name: str, required: bool = True, default=None):
     value = os.getenv(name, default)
     if required and not value:
         print(f"Missing required env var: {name}", file=sys.stderr)
@@ -28,7 +28,7 @@ def resolve_bucket(region: str) -> str:
     return f"{prefix}-{account_id}-{region.replace('-', '')}"
 
 
-def sigv4_headers(service: str, region: str, url: str, method: str, body: str) -> dict[str, str]:
+def sigv4_headers(service, region, url, method, body):
     session = boto3.Session()
     creds = session.get_credentials()
     if creds is None:

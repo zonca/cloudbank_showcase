@@ -142,16 +142,16 @@ Since your laptop cannot reach Neptune directly, you run this command **on the r
 
 ### Step 2.1: Upload the load script
 
-The load script is included in the repository at `scripts/load_data.py`. Upload it to the runner:
+The load script is included in the repository at `scripts/03_start_neptune_loader.py`. Upload it to the runner:
 
 ```bash
 # Upload the load script to the runner
-SCRIPT_B64=$(base64 -w0 scripts/load_data.py)
+SCRIPT_B64=$(base64 -w0 scripts/03_start_neptune_loader.py)
 aws ssm send-command \
   --region "$AWS_REGION" \
   --instance-ids "$RUNNER_INSTANCE_ID" \
   --document-name AWS-RunShellScript \
-  --parameters "commands=[\"echo $SCRIPT_B64 | base64 -d > /tmp/load_data.py\"]"
+  --parameters "commands=[\"echo $SCRIPT_B64 | base64 -d > /tmp/03_start_neptune_loader.py\"]"
 ```
 
 ### Step 2.2: Execute the load
@@ -168,7 +168,7 @@ LOAD_COMMAND_ID="$(aws ssm send-command \
   --region "$AWS_REGION" \
   --instance-ids "$RUNNER_INSTANCE_ID" \
   --document-name AWS-RunShellScript \
-  --parameters "commands=[\"export AWS_REGION='$AWS_REGION'\",\"export NEPTUNE_ENDPOINT='$NEPTUNE_ENDPOINT'\",\"export NEPTUNE_IAM_ROLE_ARN='$NEPTUNE_IAM_ROLE_ARN'\",\"export S3_BUCKET='$S3_BUCKET'\",\"export S3_KEY='$S3_KEY'\",\"python3 /tmp/load_data.py\"]" \
+  --parameters "commands=[\"export AWS_REGION='$AWS_REGION'\",\"export NEPTUNE_ENDPOINT='$NEPTUNE_ENDPOINT'\",\"export NEPTUNE_IAM_ROLE_ARN='$NEPTUNE_IAM_ROLE_ARN'\",\"export S3_BUCKET='$S3_BUCKET'\",\"export S3_KEY='$S3_KEY'\",\"python3 /tmp/03_start_neptune_loader.py\"]" \
   --query 'Command.CommandId' \
   --output text)"
 
@@ -209,18 +209,18 @@ export NEPTUNE_LOAD_ID=<your-load-id>
 Then upload the monitoring script and execute it:
 
 ```bash
-MONITOR_SCRIPT_B64=$(base64 -w0 scripts/monitor_load.py)
+MONITOR_SCRIPT_B64=$(base64 -w0 scripts/04_check_loader.py)
 aws ssm send-command \
   --region "$AWS_REGION" \
   --instance-ids "$RUNNER_INSTANCE_ID" \
   --document-name AWS-RunShellScript \
-  --parameters "commands=[\"echo $MONITOR_SCRIPT_B64 | base64 -d > /tmp/monitor_load.py\"]"
+  --parameters "commands=[\"echo $MONITOR_SCRIPT_B64 | base64 -d > /tmp/04_check_loader.py\"]"
 
 MONITOR_COMMAND_ID="$(aws ssm send-command \
   --region "$AWS_REGION" \
   --instance-ids "$RUNNER_INSTANCE_ID" \
   --document-name AWS-RunShellScript \
-  --parameters "commands=[\"export AWS_REGION='$AWS_REGION'\",\"export NEPTUNE_ENDPOINT='$NEPTUNE_ENDPOINT'\",\"export NEPTUNE_LOAD_ID='$NEPTUNE_LOAD_ID'\",\"python3 /tmp/monitor_load.py\"]" \
+  --parameters "commands=[\"export AWS_REGION='$AWS_REGION'\",\"export NEPTUNE_ENDPOINT='$NEPTUNE_ENDPOINT'\",\"python3 /tmp/04_check_loader.py $NEPTUNE_LOAD_ID\"]" \
   --query 'Command.CommandId' \
   --output text)"
 
@@ -252,16 +252,16 @@ Now that the data is loaded, run a simple SPARQL query to verify you can retriev
 
 ### Step 4.1: Upload the query script
 
-The query script is included in the repository at `scripts/query_neptune.py`. Upload it to the runner:
+The query script is included in the repository at `scripts/05_query_sparql.py`. Upload it to the runner:
 
 ```bash
 # Upload the query script to the runner
-QUERY_SCRIPT_B64=$(base64 -w0 scripts/query_neptune.py)
+QUERY_SCRIPT_B64=$(base64 -w0 scripts/05_query_sparql.py)
 aws ssm send-command \
   --region "$AWS_REGION" \
   --instance-ids "$RUNNER_INSTANCE_ID" \
   --document-name AWS-RunShellScript \
-  --parameters "commands=[\"echo $QUERY_SCRIPT_B64 | base64 -d > /tmp/query_neptune.py\"]"
+  --parameters "commands=[\"echo $QUERY_SCRIPT_B64 | base64 -d > /tmp/05_query_sparql.py\"]"
 ```
 
 ### Step 4.2: Execute the query
@@ -271,7 +271,7 @@ QUERY_COMMAND_ID="$(aws ssm send-command \
   --region "$AWS_REGION" \
   --instance-ids "$RUNNER_INSTANCE_ID" \
   --document-name AWS-RunShellScript \
-  --parameters "commands=[\"export AWS_REGION='$AWS_REGION'\",\"export NEPTUNE_ENDPOINT='$NEPTUNE_ENDPOINT'\",\"export SPARQL_QUERY='SELECT * WHERE { ?s ?p ?o } LIMIT 3'\",\"python3 /tmp/query_neptune.py\"]" \
+  --parameters "commands=[\"export AWS_REGION='$AWS_REGION'\",\"export NEPTUNE_ENDPOINT='$NEPTUNE_ENDPOINT'\",\"export SPARQL_QUERY='SELECT * WHERE { ?s ?p ?o } LIMIT 3'\",\"python3 /tmp/05_query_sparql.py\"]" \
   --query 'Command.CommandId' \
   --output text)"
 
@@ -292,7 +292,7 @@ QUERY_COMMAND_ID="$(aws ssm send-command \
   --region "$AWS_REGION" \
   --instance-ids "$RUNNER_INSTANCE_ID" \
   --document-name AWS-RunShellScript \
-  --parameters "commands=[\"export AWS_REGION='$AWS_REGION'\",\"export NEPTUNE_ENDPOINT='$NEPTUNE_ENDPOINT'\",\"export SPARQL_QUERY='SELECT (COUNT(*) AS ?triples) WHERE { ?s ?p ?o }'\",\"python3 /tmp/query_neptune.py\"]" \
+  --parameters "commands=[\"export AWS_REGION='$AWS_REGION'\",\"export NEPTUNE_ENDPOINT='$NEPTUNE_ENDPOINT'\",\"export SPARQL_QUERY='SELECT (COUNT(*) AS ?triples) WHERE { ?s ?p ?o }'\",\"python3 /tmp/05_query_sparql.py\"]" \
   --query 'Command.CommandId' \
   --output text)"
 

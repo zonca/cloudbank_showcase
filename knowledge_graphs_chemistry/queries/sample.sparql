@@ -1,5 +1,11 @@
-PREFIX bio: <http://example.org/bio#>
-SELECT ?compound ?disease WHERE {
-  ?compound bio:treats ?disease .
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema/#>
+PREFIX oregano: <http://erias.fr/oregano/#>
+
+# Find compounds, their names, and their medical indications
+SELECT ?compound_name ?indication_name
+WHERE {
+  ?compound oregano:has_indication ?indication .
+  ?compound rdfs:label ?compound_name .
+  ?indication rdfs:label ?indication_name .
 }
-LIMIT 10
+LIMIT 20
