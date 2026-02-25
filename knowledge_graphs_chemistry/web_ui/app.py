@@ -9,7 +9,21 @@ import streamlit as st
 from botocore.auth import SigV4Auth
 from botocore.awsrequest import AWSRequest
 
-DEFAULT_QUERY = "SELECT * WHERE { ?s ?p ?o } LIMIT 25"
+DEFAULT_QUERY = """
+# Sample query:
+# 1) Find compounds that have a Wikipedia-linked name in OREGANO.
+# 2) For each compound, also return one additional predicate/value pair.
+# 3) Keep wikipediaName visible while showing extra context columns.
+SELECT ?compound ?wikipediaName ?predicate ?value
+       (isIRI(?value) AS ?valueIsIRI)
+       (isLiteral(?value) AS ?valueIsLiteral)
+WHERE {
+  ?compound <http://erias.fr/oregano/#wikipedia> ?wikipediaName .
+  ?compound ?predicate ?value .
+  FILTER(?predicate != <http://erias.fr/oregano/#wikipedia>)
+}
+LIMIT 25
+""".strip()
 
 
 @st.cache_resource
@@ -76,7 +90,7 @@ def main() -> None:
 
     col1, col2 = st.columns(2)
     run = col1.button("Run query", type="primary")
-    col2.button("Load sample", on_click=load_sample_query)
+    col2.button("Restore sample query", on_click=load_sample_query)
 
     st.text_area("SPARQL query", key="query", height=220)
 
