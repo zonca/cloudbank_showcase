@@ -127,8 +127,10 @@ JSON
 aws logs create-log-group --region "$AWS_REGION" --log-group-name "/ecs/${APP_NAME}" >/dev/null 2>&1 || true
 TASK_DEF_ARN="$(aws ecs register-task-definition --region "$AWS_REGION" --cli-input-json "file:///tmp/${TASK_FAMILY}.json" --query 'taskDefinition.taskDefinitionArn' --output text)"
 
-CLUSTER_NAME="$(aws ecs describe-clusters --region "$AWS_REGION" --clusters "$ECS_CLUSTER" --query 'clusters[0].clusterName' --output text 2>/dev/null || true)"
-if [[ -z "$CLUSTER_NAME" || "$CLUSTER_NAME" == "None" ]]; then
+CLUSTER_STATUS="$(aws ecs describe-clusters --region "$AWS_REGION" --clusters "$ECS_CLUSTER" --query 'clusters[0].status' --output text 2>/dev/null || echo "NOT_FOUND")"
+if [[ "$CLUSTER_STATUS" != "ACTIVE" ]]; then
+  echo "Cluster status is $CLUSTER_STATUS. Creating/Recreating cluster $ECS_CLUSTER..."
+  [[ "$CLUSTER_STATUS" == "INACTIVE" ]] && aws ecs delete-cluster --region "$AWS_REGION" --cluster "$ECS_CLUSTER" >/dev/null 2>&1 || true
   aws ecs create-cluster --region "$AWS_REGION" --cluster-name "$ECS_CLUSTER" >/dev/null
 fi
 
