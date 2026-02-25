@@ -138,7 +138,23 @@ When SSM status shows `Online` and dependencies are installed, the runner is rea
 
 The bulk loader is a Neptune API that reads your data file from S3 and imports all the triples into the database. You trigger it by sending a POST request to Neptune's `/loader` endpoint.
 
-Since your laptop cannot reach Neptune directly, you run this command **on the runner** via SSM:
+Since your laptop cannot reach Neptune directly, you run this command **on the runner** via SSM. To avoid escaping issues with long commands, we first upload a script to the runner and then execute it.
+
+### Step 2.1: Upload the load script
+
+The load script is included in the repository at `scripts/load_data.py`. Upload it to the runner:
+
+```bash
+# Upload the load script to the runner
+SCRIPT_B64=$(base64 -w0 scripts/load_data.py)
+aws ssm send-command \
+  --region "$AWS_REGION" \
+  --instance-ids "$RUNNER_INSTANCE_ID" \
+  --document-name AWS-RunShellScript \
+  --parameters "commands=[\"echo $SCRIPT_B64 | base64 -d > /tmp/load_data.py\"]"
+```
+
+### Step 2.2: Execute the load
 
 ```bash
 export AWS_PROFILE=cloudbank-demo-admin
@@ -152,7 +168,7 @@ LOAD_COMMAND_ID="$(aws ssm send-command \
   --region "$AWS_REGION" \
   --instance-ids "$RUNNER_INSTANCE_ID" \
   --document-name AWS-RunShellScript \
-  --parameters "commands=[\"export AWS_REGION='$AWS_REGION'\",\"export NEPTUNE_ENDPOINT='$NEPTUNE_ENDPOINT'\",\"export NEPTUNE_IAM_ROLE_ARN='$NEPTUNE_IAM_ROLE_ARN'\",\"export S3_BUCKET='$S3_BUCKET'\",\"export S3_KEY='$S3_KEY'\",\"python3 - <<'PY'\\nimport json, os\\nimport boto3, requests\\nfrom botocore.awsrequest import AWSRequest\\nfrom botocore.auth import SigV4Auth\\nregion=os.getenv('AWS_REGION','us-west-2')\\nendpoint=os.getenv('NEPTUNE_ENDPOINT')\\nsource=f\\\"s3://{os.getenv('S3_BUCKET')}/{os.getenv('S3_KEY','data/oregano_sample.ttl')}\\\"\\nrole_arn=os.getenv('NEPTUNE_IAM_ROLE_ARN')\\nurl=f\\\"https://{endpoint}:8182/loader\\\"\\npayload={\\\"source\\\":source,\\\"format\\\":\\\"turtle\\\",\\\"iamRoleArn\\\":role_arn,\\\"region\\\":region,\\\"failOnError\\\":\\\"FALSE\\\",\\\"parallelism\\\":\\\"MEDIUM\\\",\\\"queueRequest\\\":\\\"TRUE\\\"}\\nbody=json.dumps(payload)\\ncreds=boto3.Session().get_credentials().get_frozen_credentials()\\nreq=AWSRequest(method='POST',url=url,data=body,headers={\\\"Content-Type\\\":\\\"application/json\\\"})\\nSigV4Auth(creds,'neptune-db',region).add_auth(req)\\nresp=requests.post(url,data=body,headers=dict(req.headers.items()),timeout=60)\\nprint(resp.status_code)\\nprint(resp.text)\\nPY\"]" \
+  --parameters "commands=[\"export AWS_REGION='$AWS_REGION'\",\"export NEPTUNE_ENDPOINT='$NEPTUNE_ENDPOINT'\",\"export NEPTUNE_IAM_ROLE_ARN='$NEPTUNE_IAM_ROLE_ARN'\",\"export S3_BUCKET='$S3_BUCKET'\",\"export S3_KEY='$S3_KEY'\",\"python3 /tmp/load_data.py\"]" \
   --query 'Command.CommandId' \
   --output text)"
 
@@ -184,44 +200,31 @@ loadId: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 Loading millions of triples takes a few minutes. You can check progress by querying Neptune's loader status endpoint.
 
-Set your load ID first:
+First, set your load ID:
 
 ```bash
 export NEPTUNE_LOAD_ID=<your-load-id>
 ```
 
-### Option A: Run directly (if you have a shell on the runner)
+Then upload the monitoring script and execute it:
 
 ```bash
-python3 - <<'PY'
-import json, os
-import boto3, requests
-from botocore.awsrequest import AWSRequest
-from botocore.auth import SigV4Auth
+MONITOR_SCRIPT_B64=$(base64 -w0 scripts/monitor_load.py)
+aws ssm send-command \
+  --region "$AWS_REGION" \
+  --instance-ids "$RUNNER_INSTANCE_ID" \
+  --document-name AWS-RunShellScript \
+  --parameters "commands=[\"echo $MONITOR_SCRIPT_B64 | base64 -d > /tmp/monitor_load.py\"]"
 
-region = os.getenv("AWS_REGION", "us-west-2")
-endpoint = os.getenv("NEPTUNE_ENDPOINT")
-load_id = os.getenv("NEPTUNE_LOAD_ID")
-url = f"https://{endpoint}:8182/loader?loadId={load_id}&details=TRUE"
-creds = boto3.Session().get_credentials().get_frozen_credentials()
-req = AWSRequest(method="GET", url=url)
-SigV4Auth(creds, "neptune-db", region).add_auth(req)
-resp = requests.get(url, headers=dict(req.headers.items()), timeout=60)
-print(resp.status_code)
-print(json.dumps(resp.json(), indent=2)[:4000])
-PY
-```
-
-### Option B: Run remotely via SSM (no interactive shell needed)
-
-```bash
 MONITOR_COMMAND_ID="$(aws ssm send-command \
   --region "$AWS_REGION" \
   --instance-ids "$RUNNER_INSTANCE_ID" \
   --document-name AWS-RunShellScript \
-  --parameters "commands=[\"export AWS_REGION='$AWS_REGION'\",\"export NEPTUNE_ENDPOINT='$NEPTUNE_ENDPOINT'\",\"export NEPTUNE_LOAD_ID='$NEPTUNE_LOAD_ID'\",\"python3 - <<'PY'\\nimport json, os\\nimport boto3, requests\\nfrom botocore.awsrequest import AWSRequest\\nfrom botocore.auth import SigV4Auth\\nregion=os.getenv('AWS_REGION','us-west-2')\\nendpoint=os.getenv('NEPTUNE_ENDPOINT')\\nload_id=os.getenv('NEPTUNE_LOAD_ID')\\nurl=f\\\"https://{endpoint}:8182/loader?loadId={load_id}&details=TRUE\\\"\\ncreds=boto3.Session().get_credentials().get_frozen_credentials()\\nreq=AWSRequest(method='GET',url=url)\\nSigV4Auth(creds,'neptune-db',region).add_auth(req)\\nresp=requests.get(url,headers=dict(req.headers.items()),timeout=60)\\nprint(resp.status_code)\\nprint(resp.text)\\nPY\"]" \
+  --parameters "commands=[\"export AWS_REGION='$AWS_REGION'\",\"export NEPTUNE_ENDPOINT='$NEPTUNE_ENDPOINT'\",\"export NEPTUNE_LOAD_ID='$NEPTUNE_LOAD_ID'\",\"python3 /tmp/monitor_load.py\"]" \
   --query 'Command.CommandId' \
   --output text)"
+
+echo "MONITOR_COMMAND_ID=$MONITOR_COMMAND_ID"
 
 aws ssm list-command-invocations \
   --region "$AWS_REGION" \
@@ -237,9 +240,9 @@ aws ssm list-command-invocations \
 |---|---|
 | `LOAD_IN_PROGRESS` | Neptune is still importing records — check again in a minute |
 | `LOAD_COMPLETED` | All records loaded successfully |
-| `LOAD_FAILED` | Something went wrong — check the error details in the response |
+| `LOAD_FAILED` | Something went wrong — check the error details. Note: many triples may have been successfully loaded even if the overall status is `LOAD_FAILED`. |
 
-A successful load will report statistics like total records imported, duplicates skipped, and parsing errors (should be zero).
+A successful load (or a mostly successful one) will report statistics like total records imported.
 
 ---
 
@@ -247,20 +250,28 @@ A successful load will report statistics like total records imported, duplicates
 
 Now that the data is loaded, run a simple SPARQL query to verify you can retrieve results.
 
-This query asks for 3 arbitrary triples — it does not depend on any specific domain knowledge:
+### Step 4.1: Upload the query script
 
-```sparql
-SELECT * WHERE { ?s ?p ?o } LIMIT 3
+The query script is included in the repository at `scripts/query_neptune.py`. Upload it to the runner:
+
+```bash
+# Upload the query script to the runner
+QUERY_SCRIPT_B64=$(base64 -w0 scripts/query_neptune.py)
+aws ssm send-command \
+  --region "$AWS_REGION" \
+  --instance-ids "$RUNNER_INSTANCE_ID" \
+  --document-name AWS-RunShellScript \
+  --parameters "commands=[\"echo $QUERY_SCRIPT_B64 | base64 -d > /tmp/query_neptune.py\"]"
 ```
 
-### Run via SSM
+### Step 4.2: Execute the query
 
 ```bash
 QUERY_COMMAND_ID="$(aws ssm send-command \
   --region "$AWS_REGION" \
   --instance-ids "$RUNNER_INSTANCE_ID" \
   --document-name AWS-RunShellScript \
-  --parameters "commands=[\"export AWS_REGION='$AWS_REGION'\",\"export NEPTUNE_ENDPOINT='$NEPTUNE_ENDPOINT'\",\"python3 - <<'PY'\\nimport boto3, requests\\nfrom botocore.awsrequest import AWSRequest\\nfrom botocore.auth import SigV4Auth\\nregion='${AWS_REGION}'\\nendpoint='${NEPTUNE_ENDPOINT}'\\nquery='SELECT * WHERE { ?s ?p ?o } LIMIT 3'\\nurl=f\\\"https://{endpoint}:8182/sparql\\\"\\ncreds=boto3.Session().get_credentials().get_frozen_credentials()\\nreq=AWSRequest(method='POST',url=url,data=query,headers={\\\"Content-Type\\\":\\\"application/sparql-query\\\",\\\"Accept\\\":\\\"application/sparql-results+json\\\"})\\nSigV4Auth(creds,'neptune-db',region).add_auth(req)\\nheaders=dict(req.headers.items())\\nheaders['Accept']='application/sparql-results+json'\\nresp=requests.post(url,headers=headers,data=query.encode(),timeout=60)\\nprint(resp.status_code)\\nprint(resp.text[:1200])\\nPY\"]" \
+  --parameters "commands=[\"export AWS_REGION='$AWS_REGION'\",\"export NEPTUNE_ENDPOINT='$NEPTUNE_ENDPOINT'\",\"export SPARQL_QUERY='SELECT * WHERE { ?s ?p ?o } LIMIT 3'\",\"python3 /tmp/query_neptune.py\"]" \
   --query 'Command.CommandId' \
   --output text)"
 
@@ -272,17 +283,26 @@ aws ssm list-command-invocations \
   --output text
 ```
 
-**What to look for:** A `200` status code and JSON results containing triples (subjects, predicates, objects). The specific values will come from the OREGANO dataset.
+**What to look for:** A `200` status code and JSON results containing triples.
 
-### Count all triples
+### Step 4.3: Count all triples
 
-To see how many facts are in the database:
+```bash
+QUERY_COMMAND_ID="$(aws ssm send-command \
+  --region "$AWS_REGION" \
+  --instance-ids "$RUNNER_INSTANCE_ID" \
+  --document-name AWS-RunShellScript \
+  --parameters "commands=[\"export AWS_REGION='$AWS_REGION'\",\"export NEPTUNE_ENDPOINT='$NEPTUNE_ENDPOINT'\",\"export SPARQL_QUERY='SELECT (COUNT(*) AS ?triples) WHERE { ?s ?p ?o }'\",\"python3 /tmp/query_neptune.py\"]" \
+  --query 'Command.CommandId' \
+  --output text)"
 
-```sparql
-SELECT (COUNT(*) AS ?triples) WHERE { ?s ?p ?o }
+aws ssm list-command-invocations \
+  --region "$AWS_REGION" \
+  --command-id "$QUERY_COMMAND_ID" \
+  --details \
+  --query 'CommandInvocations[0].CommandPlugins[0].Output' \
+  --output text
 ```
-
-A successful load of the full OREGANO dataset typically returns a count in the millions.
 
 ---
 
@@ -290,8 +310,9 @@ A successful load of the full OREGANO dataset typically returns a count in the m
 
 | Problem | Likely cause | Fix |
 |---|---|---|
-| Load fails with "Couldn't find the aws credential for iam_role_arn" | IAM role is not associated with the Neptune cluster, **or** the VPC is missing an STS endpoint | 1. Associate the role: `aws neptune add-role-to-db-cluster --db-cluster-identifier cloudbank-biobricks-neptune --role-arn $NEPTUNE_IAM_ROLE_ARN --region $AWS_REGION` 2. Create an STS interface endpoint (`com.amazonaws.us-west-2.sts`) in the VPC with private DNS enabled |
-| SSM command returns "failed" | Runner instance is not registered with SSM yet | Wait longer in the SSM polling loop, or verify the instance profile has `AmazonSSMManagedInstanceCore` |
+| Load fails with "Couldn't find the aws credential for iam_role_arn" | IAM role is not associated with the Neptune cluster, **or** the VPC is missing an STS endpoint | 1. Associate the role: `aws neptune add-role-to-db-cluster --db-cluster-identifier cloudbank-biobricks-neptune --role-arn $NEPTUNE_IAM_ROLE_ARN --region $AWS_REGION` 2. Verify an STS interface endpoint (`com.amazonaws.us-west-2.sts`) exists in the VPC with private DNS enabled |
+| Load fails with "Access Denied" to S3 | The IAM role lacks permissions or the bucket name is wrong | 1. Check `NeptuneLoadFromS3Role` has S3 read access. 2. Verify `S3_BUCKET` in `.env` is correct. |
+| SSM command returns "failed" | Runner instance is not registered with SSM yet, or missing dependencies | 1. Wait longer in the SSM polling loop. 2. Ensure `pip3 install boto3 requests` was successful on the runner. |
 | Query times out | Running from your laptop instead of the runner | Use the SSM approach above — Neptune is only reachable from inside the VPC |
 | Load status shows `LOAD_FAILED` with parse errors | Corrupted or incomplete data file | Re-download and re-upload the `.ttl` file, then retry the load |
 
