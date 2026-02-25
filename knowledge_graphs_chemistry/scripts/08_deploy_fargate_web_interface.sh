@@ -112,7 +112,10 @@ JSON
 aws logs create-log-group --region "$AWS_REGION" --log-group-name "/ecs/${APP_NAME}" >/dev/null 2>&1 || true
 TASK_DEF_ARN="$(aws ecs register-task-definition --region "$AWS_REGION" --cli-input-json "file:///tmp/${TASK_FAMILY}.json" --query 'taskDefinition.taskDefinitionArn' --output text)"
 
-aws ecs describe-clusters --region "$AWS_REGION" --clusters "$ECS_CLUSTER" --query 'clusters[0].clusterName' --output text >/dev/null 2>&1 || aws ecs create-cluster --region "$AWS_REGION" --cluster-name "$ECS_CLUSTER" >/dev/null
+CLUSTER_NAME="$(aws ecs describe-clusters --region "$AWS_REGION" --clusters "$ECS_CLUSTER" --query 'clusters[0].clusterName' --output text 2>/dev/null || true)"
+if [[ -z "$CLUSTER_NAME" || "$CLUSTER_NAME" == "None" ]]; then
+  aws ecs create-cluster --region "$AWS_REGION" --cluster-name "$ECS_CLUSTER" >/dev/null
+fi
 
 if aws ecs describe-services --region "$AWS_REGION" --cluster "$ECS_CLUSTER" --services "$ECS_SERVICE" --query 'services[0].serviceName' --output text 2>/dev/null | grep -q "$ECS_SERVICE"; then
   aws ecs update-service --region "$AWS_REGION" --cluster "$ECS_CLUSTER" --service "$ECS_SERVICE" --task-definition "$TASK_DEF_ARN" --force-new-deployment >/dev/null
