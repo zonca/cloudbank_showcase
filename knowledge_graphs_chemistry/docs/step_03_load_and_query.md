@@ -1,94 +1,95 @@
-# Step 3: Load And Query Neptune
+# Step 3: Load Data and Run Queries
 
-This step triggers Neptune bulk load and validates SPARQL queries.
+## What This Step Does
 
-## Automation Path
+This is where everything comes together. You will:
 
-If you want to skip manual clicking, use the automated command path in this file:
+1. Make sure the dataset is in your S3 bucket.
+2. Create a small helper machine (EC2 "runner") inside Neptune's private network.
+3. Tell Neptune to load the data from S3.
+4. Run your first queries to confirm the data is there.
 
-1. Ensure data is in Simple Storage Service (Section 0).
-2. Create or reuse an in-network compute runner (Section 1).
-3. Trigger loader through remote shell command execution (Section 2).
-4. Monitor load and run query checks (Sections 3 and 4).
+### Why do I need a helper machine?
 
-What you are proving in this step:
+Neptune is inside a private network (VPC) and cannot be reached directly from your laptop. The EC2 runner is a tiny virtual machine sitting **inside** the same network, so it can talk to Neptune. You send commands to this runner using **AWS Systems Manager (SSM)** — no SSH keys or open ports required.
 
-1. Neptune can read your RDF file from S3.
-2. Data actually lands in the graph store.
-3. You can query the graph and get results back.
+---
 
-## Why this step runs in-VPC
+## 0) Make Sure the Data Is in S3
 
-The Neptune instance is private (`PubliclyAccessible=false`), so direct calls from your local machine will time out.
+Before Neptune can load anything, the dataset file must already be in your S3 bucket. If you have not done this yet, go back and run the upload step (see Step 1 and the `scripts/01_download_oregano.sh` / `scripts/02_upload_to_s3.sh` scripts).
 
-Use an EC2 runner in the same VPC and execute commands via SSM.
+---
 
-## 0) Prerequisite From Earlier Step
+## 1) Create or Reuse the EC2 Runner
 
-Before running this step, complete the earlier upload workflow in:
-
-- `docs/step_01_aws_auth.md`
-
-Why this is required:
-
-- The Neptune loader reads from Amazon Simple Storage Service.
-- If the Turtle file is not uploaded yet, the load call will fail immediately.
-
-## 1) Launch/Use Runner EC2
-
-You need one compute runner in the same Virtual Private Cloud as Neptune.
-You can reuse an existing instance or create one from command line.
-
-Reuse an existing runner by tag:
+### Check for an existing runner
 
 ```bash
 export AWS_PROFILE=cloudbank-demo-admin
 export AWS_REGION=us-west-2
+
 RUNNER_INSTANCE_ID="$(aws ec2 describe-instances \
   --region "$AWS_REGION" \
-  --filters Name=tag:Name,Values=cloudbank-neptune-runner Name=instance-state-name,Values=running \
+  --filters Name=tag:Name,Values=cloudbank-neptune-runner \
+            Name=instance-state-name,Values=running \
   --query 'Reservations[0].Instances[0].InstanceId' \
   --output text)"
 echo "RUNNER_INSTANCE_ID=$RUNNER_INSTANCE_ID"
 ```
 
-If that returns `None`, create a new runner with the next command block.
+If this prints an instance ID (e.g., `i-0abc123...`), you already have a runner — skip to [Section 2](#2-trigger-the-bulk-load).
 
-Create a runner (one-time setup):
+If it prints `None`, create one with the block below.
+
+### Create a new runner
+
+This creates a tiny `t3.micro` instance in the same VPC as Neptune, with SSM access enabled:
 
 ```bash
 export AWS_PROFILE=cloudbank-demo-admin
 export AWS_REGION=us-west-2
 
-# Detect default Virtual Private Cloud and one subnet (override if needed)
-export VPC_ID="${VPC_ID:-$(aws ec2 describe-vpcs --region "$AWS_REGION" --filters Name=isDefault,Values=true --query 'Vpcs[0].VpcId' --output text)}"
-export SUBNET_ID="${SUBNET_ID:-$(aws ec2 describe-subnets --region "$AWS_REGION" --filters Name=vpc-id,Values="$VPC_ID" Name=default-for-az,Values=true --query 'Subnets[0].SubnetId' --output text)}"
+# Auto-detect VPC and subnet (override VPC_ID / SUBNET_ID if needed)
+export VPC_ID="${VPC_ID:-$(aws ec2 describe-vpcs --region "$AWS_REGION" \
+  --filters Name=isDefault,Values=true \
+  --query 'Vpcs[0].VpcId' --output text)}"
+export SUBNET_ID="${SUBNET_ID:-$(aws ec2 describe-subnets --region "$AWS_REGION" \
+  --filters Name=vpc-id,Values="$VPC_ID" Name=default-for-az,Values=true \
+  --query 'Subnets[0].SubnetId' --output text)}"
 
-# Create role and instance profile for System Manager access (idempotent)
+# Create IAM role + instance profile so SSM can manage the instance
 aws iam create-role \
   --role-name CloudbankDemoEc2Role \
-  --assume-role-policy-document '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"ec2.amazonaws.com"},"Action":"sts:AssumeRole"}]}' >/dev/null 2>&1 || true
+  --assume-role-policy-document '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"ec2.amazonaws.com"},"Action":"sts:AssumeRole"}]}' \
+  >/dev/null 2>&1 || true
 
-aws iam attach-role-policy --role-name CloudbankDemoEc2Role --policy-arn arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore >/dev/null 2>&1 || true
-aws iam attach-role-policy --role-name CloudbankDemoEc2Role --policy-arn arn:aws:iam::aws:policy/AdministratorAccess >/dev/null 2>&1 || true
+aws iam attach-role-policy --role-name CloudbankDemoEc2Role \
+  --policy-arn arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore >/dev/null 2>&1 || true
+aws iam attach-role-policy --role-name CloudbankDemoEc2Role \
+  --policy-arn arn:aws:iam::aws:policy/AdministratorAccess >/dev/null 2>&1 || true
 
-aws iam create-instance-profile --instance-profile-name CloudbankDemoEc2Profile >/dev/null 2>&1 || true
-aws iam add-role-to-instance-profile --instance-profile-name CloudbankDemoEc2Profile --role-name CloudbankDemoEc2Role >/dev/null 2>&1 || true
+aws iam create-instance-profile \
+  --instance-profile-name CloudbankDemoEc2Profile >/dev/null 2>&1 || true
+aws iam add-role-to-instance-profile \
+  --instance-profile-name CloudbankDemoEc2Profile \
+  --role-name CloudbankDemoEc2Role >/dev/null 2>&1 || true
 
-# Use the Neptune security group when available
+# Use the same security group as Neptune so the runner can reach port 8182
 NEPTUNE_SG_ID="$(aws neptune describe-db-clusters \
   --region "$AWS_REGION" \
   --db-cluster-identifier cloudbank-biobricks-neptune \
   --query 'DBClusters[0].VpcSecurityGroups[0].VpcSecurityGroupId' \
   --output text)"
 
-AMI_ID="$(aws ec2 describe-images \
-  --owners amazon \
-  --region "$AWS_REGION" \
-  --filters Name=name,Values='al2023-ami-2023*kernel-6.1-x86_64' Name=state,Values=available \
+# Pick the latest Amazon Linux 2023 AMI
+AMI_ID="$(aws ec2 describe-images --owners amazon --region "$AWS_REGION" \
+  --filters Name=name,Values='al2023-ami-2023*kernel-6.1-x86_64' \
+            Name=state,Values=available \
   --query 'Images | sort_by(@,&CreationDate)[-1].ImageId' \
   --output text)"
 
+# Launch the instance
 RUNNER_INSTANCE_ID="$(aws ec2 run-instances \
   --region "$AWS_REGION" \
   --image-id "$AMI_ID" \
@@ -104,34 +105,37 @@ RUNNER_INSTANCE_ID="$(aws ec2 run-instances \
 echo "RUNNER_INSTANCE_ID=$RUNNER_INSTANCE_ID"
 ```
 
-Wait for runner registration in System Manager:
+### Wait for the runner to be ready
+
+The runner needs a minute to start and register with Systems Manager:
 
 ```bash
 aws ec2 wait instance-running --region "$AWS_REGION" --instance-ids "$RUNNER_INSTANCE_ID"
+
+# Poll until SSM reports "Online"
 for i in {1..30}; do
-  status="$(aws ssm describe-instance-information --region "$AWS_REGION" --filters Key=InstanceIds,Values="$RUNNER_INSTANCE_ID" --query 'InstanceInformationList[0].PingStatus' --output text)"
-  echo "System Manager status: $status"
+  status="$(aws ssm describe-instance-information --region "$AWS_REGION" \
+    --filters Key=InstanceIds,Values="$RUNNER_INSTANCE_ID" \
+    --query 'InstanceInformationList[0].PingStatus' --output text)"
+  echo "SSM status: $status"
   [ "$status" = "Online" ] && break
   sleep 5
 done
 ```
 
-Runner instance (example format):
+When SSM status shows `Online`, the runner is ready.
 
-- Instance ID: `i-xxxxxxxxxxxxxxxxx`
-- Region: `us-west-2`
+---
 
-You can re-use this instance while demoing.
+## 2) Trigger the Bulk Load
 
-## 2) Trigger Bulk Load (from runner)
+The bulk loader is a Neptune API that reads your data file from S3 and imports all the triples into the database. You trigger it by sending a POST request to Neptune's `/loader` endpoint.
 
-Run loader from the runner with remote command execution:
+Since your laptop cannot reach Neptune directly, you run this command **on the runner** via SSM:
 
 ```bash
 export AWS_PROFILE=cloudbank-demo-admin
-set -a
-source .env
-set +a
+set -a && source .env && set +a
 
 ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
 S3_BUCKET="${S3_BUCKET:-${BUCKET_PREFIX}-${ACCOUNT_ID}-${AWS_REGION//-/}}"
@@ -148,7 +152,7 @@ LOAD_COMMAND_ID="$(aws ssm send-command \
 echo "LOAD_COMMAND_ID=$LOAD_COMMAND_ID"
 ```
 
-Fetch output and capture load identifier:
+### Get the load result
 
 ```bash
 aws ssm list-command-invocations \
@@ -159,51 +163,49 @@ aws ssm list-command-invocations \
   --output text
 ```
 
-Look for output like:
+In the output, look for:
 
-```text
+```
 loadId: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
-Why `loadId` matters:
+**Save this `loadId`** — you will use it to check progress in the next section.
 
-- It is the tracking key for progress and troubleshooting.
-- Keep it in your notes/logs.
+---
 
-## 3) Monitor Load Status
+## 3) Monitor the Load
 
-Poll from runner (or any in-VPC host that can reach Neptune):
+Loading millions of triples takes a few minutes. You can check progress by querying Neptune's loader status endpoint.
 
-Set the load identifier first:
+Set your load ID first:
 
 ```bash
 export NEPTUNE_LOAD_ID=<your-load-id>
 ```
 
+### Option A: Run directly (if you have a shell on the runner)
+
 ```bash
 python3 - <<'PY'
-import json
-import boto3
-import requests
+import json, os
+import boto3, requests
 from botocore.awsrequest import AWSRequest
 from botocore.auth import SigV4Auth
 
-import os
-
-region=os.getenv("AWS_REGION","us-west-2")
-endpoint=os.getenv("NEPTUNE_ENDPOINT")
-load_id=os.getenv("NEPTUNE_LOAD_ID")
-url=f"https://{endpoint}:8182/loader?loadId={load_id}&details=TRUE"
-creds=boto3.Session().get_credentials().get_frozen_credentials()
-req=AWSRequest(method="GET", url=url)
+region = os.getenv("AWS_REGION", "us-west-2")
+endpoint = os.getenv("NEPTUNE_ENDPOINT")
+load_id = os.getenv("NEPTUNE_LOAD_ID")
+url = f"https://{endpoint}:8182/loader?loadId={load_id}&details=TRUE"
+creds = boto3.Session().get_credentials().get_frozen_credentials()
+req = AWSRequest(method="GET", url=url)
 SigV4Auth(creds, "neptune-db", region).add_auth(req)
-resp=requests.get(url, headers=dict(req.headers.items()), timeout=60)
+resp = requests.get(url, headers=dict(req.headers.items()), timeout=60)
 print(resp.status_code)
 print(json.dumps(resp.json(), indent=2)[:4000])
 PY
 ```
 
-Automation alternative (run remotely via System Manager, no interactive shell on runner required):
+### Option B: Run remotely via SSM (no interactive shell needed)
 
 ```bash
 MONITOR_COMMAND_ID="$(aws ssm send-command \
@@ -222,46 +224,29 @@ aws ssm list-command-invocations \
   --output text
 ```
 
-Status meanings:
+### Understanding the status
 
-- `LOAD_IN_PROGRESS`: ingestion is still running
-- `LOAD_COMPLETED`: ingestion finished successfully
-- `LOAD_FAILED`: ingestion stopped due to an error
+| Status | Meaning |
+|---|---|
+| `LOAD_IN_PROGRESS` | Neptune is still importing records — check again in a minute |
+| `LOAD_COMPLETED` | All records loaded successfully |
+| `LOAD_FAILED` | Something went wrong — check the error details in the response |
 
-Observed during this run:
+A successful load will report statistics like total records imported, duplicates skipped, and parsing errors (should be zero).
 
-- final status: `LOAD_COMPLETED`
-- `totalRecords=3378120`
-- `totalDuplicates=3440`
-- `parsingErrors=0`
-- `insertErrors=0`
-- import runtime: `524 seconds` (about `8 minutes 44 seconds`)
+---
 
-Interpretation:
+## 4) Run Your First Query
 
-- The loader processed millions of records with zero parse/insert errors.
-- This indicates the source Turtle file and loader configuration were valid.
+Now that the data is loaded, run a simple SPARQL query to verify you can retrieve results.
 
-## 4) Query Smoke Test (from runner)
-
-This query succeeded:
+This query asks for 3 arbitrary triples — it does not depend on any specific domain knowledge:
 
 ```sparql
 SELECT * WHERE { ?s ?p ?o } LIMIT 3
 ```
 
-Result included OREGANO triples such as:
-
-- `http://erias.fr/oregano/compound/compound_418`
-- predicate `http://erias.fr/oregano/#wikipedia`
-- object literal `cefpiramide`
-
-Why this query is useful:
-
-- It is schema-agnostic and fast.
-- It confirms data is queryable even before you design domain-specific SPARQL queries.
-
-Automation alternative (run query via System Manager):
+### Run via SSM
 
 ```bash
 QUERY_COMMAND_ID="$(aws ssm send-command \
@@ -280,31 +265,31 @@ aws ssm list-command-invocations \
   --output text
 ```
 
-Post-load aggregate validation:
+**What to look for:** A `200` status code and JSON results containing triples (subjects, predicates, objects). The specific values will come from the OREGANO dataset.
+
+### Count all triples
+
+To see how many facts are in the database:
 
 ```sparql
 SELECT (COUNT(*) AS ?triples) WHERE { ?s ?p ?o }
 ```
 
-Observed result:
+A successful load of the full OREGANO dataset typically returns a count in the millions.
 
-- `triples = 3374680`
+---
 
-Note on counts:
+## 5) Troubleshooting
 
-- `totalRecords` from loader and SPARQL triple counts may differ slightly due to duplicates and loader accounting semantics.
+| Problem | Likely cause | Fix |
+|---|---|---|
+| Load fails with "Couldn't find the aws credential for iam_role_arn" | IAM role is not associated with the Neptune cluster, **or** the VPC is missing an STS endpoint | 1. Associate the role: `aws neptune add-role-to-db-cluster --db-cluster-identifier cloudbank-biobricks-neptune --role-arn $NEPTUNE_IAM_ROLE_ARN --region $AWS_REGION` 2. Create an STS interface endpoint (`com.amazonaws.us-west-2.sts`) in the VPC with private DNS enabled |
+| SSM command returns "failed" | Runner instance is not registered with SSM yet | Wait longer in the SSM polling loop, or verify the instance profile has `AmazonSSMManagedInstanceCore` |
+| Query times out | Running from your laptop instead of the runner | Use the SSM approach above — Neptune is only reachable from inside the VPC |
+| Load status shows `LOAD_FAILED` with parse errors | Corrupted or incomplete data file | Re-download and re-upload the `.ttl` file, then retry the load |
 
-## 5) Prerequisites that must be true
+---
 
-If bulk load fails with:
+## Next Step
 
-`Couldn't find the aws credential for iam_role_arn`
-
-ensure both are true:
-
-1. Role is associated to cluster:
-   - `aws neptune add-role-to-db-cluster ...`
-2. STS endpoint exists in VPC:
-   - `com.amazonaws.us-west-2.sts` (Interface endpoint with private DNS)
-
-This is a common pitfall in private VPC deployments.
+If everything worked, move on to **[Step 4: Deploy a Web Interface](step_04_fargate_web_interface.md)** to give non-technical users a browser-based way to query the graph.

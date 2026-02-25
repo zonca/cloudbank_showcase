@@ -1,63 +1,53 @@
-# Step 1: AWS Authentication (Detailed)
+# Step 1: Connect Your Terminal to AWS
 
-This step configures AWS credentials for this demo project and verifies they work.
+## What This Step Does
 
-## Automation Path
+Before you can create cloud resources (storage buckets, databases, networks), your terminal needs to prove **who you are** to AWS. This step sets up that connection.
 
-This step is mostly manual by design because it depends on your account access method and credential policies.
-There is no full one-command automation for this step.
-If your profiles already work, skip to **Section 4** in this file.
+Think of it like logging into a website, but from the command line instead of a browser.
 
-If you are new to AWS:
+> **Nothing else in this tutorial will work until authentication is correct.** Take the time to verify each command — it saves hours of debugging later.
 
-- Think of this step as "connect my terminal to my AWS account."
-- Nothing in Neptune can work until this is correct.
-- Do not skip validation commands; they save time later.
+## Can I Automate This?
 
-CloudBank billing account access page (direct link):
+This step is mostly manual because it depends on how your specific AWS account is set up. If you already have working AWS CLI profiles, skip ahead to [Section 4 — Set Environment Variables](#4-set-environment-variables).
 
-- https://www.cloudbank.org/billing-account-access
+---
 
 ## Goal
 
-By the end of this step, these commands must succeed:
+By the end of this step, both of these commands succeed:
 
 ```bash
-aws sts get-caller-identity
-aws s3 ls
+aws sts get-caller-identity   # prints your account info
+aws s3 ls                     # lists your S3 buckets
 ```
 
-## 1) Activate Project Environment
+---
 
-From the project root:
+## 1) Set Up Your Project Environment
+
+Open a terminal, navigate to the project folder, and activate the Python virtual environment:
 
 ```bash
 cd <your-project-folder>/knowledge_graphs_chemistry
 source .venv/bin/activate
 ```
 
-Confirm version:
+Verify the AWS CLI is installed:
 
 ```bash
-which aws
-aws --version
+which aws        # should print a path like /usr/local/bin/aws
+aws --version     # should show aws-cli/2.x
 ```
 
-Expected `which aws`:
+If `aws` is not found, install it first — see [.tools/aws/README.md](../.tools/aws/README.md) or the [AWS CLI install guide](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html).
 
-An `aws` binary in your local `PATH` (for example `/usr/local/bin/aws` or `$HOME/.local/bin/aws`)
+---
 
-Expected version: `aws-cli/2.x`
+## 2) Create Your AWS CLI Profile
 
-## 2) Configure Credentials (Access Key + Secret)
-
-Use this flow to match the older tutorial style.
-
-What this command does:
-
-- Stores your access key and secret in `~/.aws/credentials`
-- Stores your region/output settings in `~/.aws/config`
-- Creates a named profile so you can switch identities safely
+A **profile** stores your credentials (access key + secret) so you do not have to type them every time.
 
 Run:
 
@@ -65,94 +55,108 @@ Run:
 aws configure --profile cloudbank-demo
 ```
 
-When prompted:
+When prompted, enter:
 
-- `AWS Access Key ID`: paste key id
-- `AWS Secret Access Key`: paste secret
-- `Default region name`: `us-west-2` (Oregon)
-- `Default output format`: `json`
+| Prompt | What to enter |
+|---|---|
+| AWS Access Key ID | Your access key (from the AWS console) |
+| AWS Secret Access Key | Your secret key |
+| Default region name | `us-west-2` |
+| Default output format | `json` |
 
-Activate profile for the session:
+Then activate the profile for your current terminal session:
 
 ```bash
 export AWS_PROFILE=cloudbank-demo
 ```
 
-## 2.1) Create Admin User/Profile for Infra Provisioning
+> **Where do I get an access key?** Log into the [AWS Console](https://console.aws.amazon.com/) → IAM → Users → your user → Security credentials → Create access key.
 
-Use this for Neptune/VPC/IAM creation steps.
+> **CloudBank users:** request billing access at <https://www.cloudbank.org/billing-account-access> first.
 
-Why two users/profiles:
+---
 
-- `cloudbank-demo`: safer daily profile for normal demo operations
-- `cloudbank-demo-admin`: elevated profile for one-time infrastructure setup
+## 2.1) Create a Separate Admin Profile (Recommended)
 
-This separation reduces accidental changes and is closer to real production practice.
+Later steps create infrastructure (networks, databases, IAM roles) that require elevated permissions. It is best practice to use a separate admin profile for those one-time setup tasks and a regular profile for day-to-day work. This limits the chance of accidental changes.
 
-Console steps:
+| Profile | Used for |
+|---|---|
+| `cloudbank-demo` | Normal operations (upload data, run queries) |
+| `cloudbank-demo-admin` | One-time setup (create VPC, Neptune, IAM roles) |
 
-1. Open `IAM` -> `Users` -> `Create user`.
+### Create the admin user in the AWS Console
+
+1. Open **IAM** → **Users** → **Create user**.
 2. Username: `cloudbank-demo-admin`.
-3. `Attach policies directly` -> select `AdministratorAccess`.
-4. Create user.
-5. Open user -> `Security credentials` -> `Create access key` -> `Command Line Interface (CLI)`.
-6. Save Access Key ID and Secret Access Key.
+3. Select **Attach policies directly** → check **AdministratorAccess**.
+4. Click **Create user**.
+5. Open the new user → **Security credentials** → **Create access key** → choose **Command Line Interface (CLI)**.
+6. Copy the Access Key ID and Secret Access Key.
 
-Configure local profile:
+### Configure the admin profile locally
 
 ```bash
 aws configure --profile cloudbank-demo-admin
-# Default region name: us-west-2
-# Default output format: json
+# AWS Access Key ID:       <paste the admin key>
+# AWS Secret Access Key:   <paste the admin secret>
+# Default region name:     us-west-2
+# Default output format:   json
 ```
 
-Verify:
+Verify it works:
 
 ```bash
 aws sts get-caller-identity --profile cloudbank-demo-admin
 ```
 
-## 3) Validate Credentials
+---
 
-Run:
+## 3) Verify Your Credentials
+
+Run these two commands (with your active profile):
 
 ```bash
 aws sts get-caller-identity
 ```
 
-Expected: JSON with `Account`, `Arn`, and `UserId`.
-
-Then:
+**Expected output:** JSON containing `Account`, `Arn`, and `UserId`. If you see this, authentication is working.
 
 ```bash
 aws s3 ls
 ```
 
-Expected: list of buckets (or access denied if S3 policy is restricted; in that case auth is still valid if STS worked).
+**Expected output:** a list of S3 buckets (may be empty if the account is new). An `AccessDenied` error here is OK — it means your identity is valid but lacks S3 permissions; the important check is that `sts get-caller-identity` succeeded.
 
-If `aws sts get-caller-identity` works, your authentication is good even if S3 listing is denied.
+---
 
-## 4) Set Region for This Demo
+## 4) Set Environment Variables
 
-This repo uses environment variables loaded from `.env`.
+The scripts in this tutorial read settings from a single `.env` file so you do not have to pass long arguments every time.
+
+Create the file (if it does not already exist):
 
 ```bash
 cp -n .env.example .env
 ```
 
-Edit `.env` and set:
+Open `.env` in your editor and fill in at least these two values:
 
-- `AWS_REGION`
-- `BUCKET_PREFIX`
-- `S3_KEY`
-- `NEPTUNE_ENDPOINT` (later, after cluster creation)
-- `NEPTUNE_IAM_ROLE_ARN` (later, after IAM role creation)
+| Variable | What to set | Example |
+|---|---|---|
+| `AWS_REGION` | The AWS region you are using | `us-west-2` |
+| `BUCKET_PREFIX` | A short name prefix for your S3 bucket | `cloudbank-demo` |
 
-`S3_BUCKET` is optional. If omitted, scripts derive:
+You will fill in these additional values **later**, after creating the infrastructure in Step 2:
 
-`<BUCKET_PREFIX>-<accountid>-<region-without-dashes>`
+| Variable | When to set |
+|---|---|
+| `NEPTUNE_ENDPOINT` | After creating the Neptune cluster (Step 2) |
+| `NEPTUNE_IAM_ROLE_ARN` | After creating the IAM role (Step 2) |
 
-Load `.env` into shell:
+> **How is the S3 bucket name derived?** If you do not set `S3_BUCKET` explicitly, scripts will build it automatically as `<BUCKET_PREFIX>-<account-id>-<region-without-dashes>`. This keeps bucket names unique.
+
+Load the variables into your current shell:
 
 ```bash
 set -a
@@ -160,24 +164,24 @@ source .env
 set +a
 ```
 
-Why `.env` matters:
+---
 
-- Scripts read these values so you do not need to pass long CLI arguments every time.
-- Keeping values in one file reduces copy/paste errors.
+## 5) Troubleshooting
 
-## 5) Common Failure Modes
+| Error message | What it means | How to fix |
+|---|---|---|
+| `Unable to locate credentials` | No profile is active | Run `export AWS_PROFILE=cloudbank-demo` and retry |
+| `InvalidClientTokenId` | Access key is wrong or disabled | Re-check the key in the AWS Console; create a new one if needed |
+| `AccessDenied` on `aws s3 ls` | Credentials work but lack S3 permissions | Fine for now — STS worked, so authentication is correct |
+| `ExpiredToken` | Temporary credentials have expired | Re-authenticate or generate new keys |
 
-- `Unable to locate credentials`:
-  - Re-run `aws configure --profile cloudbank-demo` and export `AWS_PROFILE`.
-- `InvalidClientTokenId`:
-  - Access key is wrong or inactive.
-- `AccessDenied` on `aws s3 ls`:
-  - Credentials are valid, but the user/role lacks S3 permissions.
-## 6) Success Criteria
+---
 
-You are ready for Step 2 when all are true:
+## 6) Ready for Step 2?
 
-- `aws sts get-caller-identity` succeeds
-- `AWS_PROFILE` is set to the profile you configured
-- `.env` exists with at least `AWS_REGION` and `BUCKET_PREFIX` filled
-- `cloudbank-demo-admin` profile works if you plan to provision Neptune from CLI
+You are good to go when **all** of these are true:
+
+- [ ] `aws sts get-caller-identity` prints your account info
+- [ ] `AWS_PROFILE` is set to your chosen profile
+- [ ] `.env` exists with `AWS_REGION` and `BUCKET_PREFIX` filled in
+- [ ] *(If you plan to create infrastructure from the CLI)* `cloudbank-demo-admin` profile works
