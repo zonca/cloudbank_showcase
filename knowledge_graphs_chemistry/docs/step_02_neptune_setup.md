@@ -2,6 +2,20 @@
 
 This step creates the Neptune infrastructure needed for bulk load from S3.
 
+## Automation Path
+
+If you want to skip manual console setup, jump directly to:
+
+- **Optional: CLI Automation** in this file
+
+Quick automation route:
+
+1. Run `scripts/06_create_neptune_load_role.sh`
+2. Run `scripts/07_create_neptune_cluster.sh`
+3. Wait for Neptune instance availability using the wait command printed by script output
+
+Those scripts apply defaults and create most required resources automatically.
+
 Beginner mental model:
 
 - S3 stores files.
@@ -190,13 +204,13 @@ set +a
 # Create Neptune S3 load role (or update inline policy if role exists)
 bash scripts/06_create_neptune_load_role.sh
 
-# You must provide network ids (from VPC/EC2 console or CLI):
-export VPC_ID=vpc-xxxxxxxx
-export SUBNET_IDS=subnet-aaaaaaa,subnet-bbbbbbb
-export NEPTUNE_INGRESS_CIDR=10.0.0.0/16
-
 # Create Neptune subnet group, SG, cluster, and instance
 bash scripts/07_create_neptune_cluster.sh
+
+# Wait until Neptune instance is ready
+aws neptune wait db-instance-available \
+  --db-instance-identifier cloudbank-biobricks-neptune-1 \
+  --region us-west-2
 ```
 
 ## Executed Workflow (This Repo)

@@ -111,15 +111,6 @@ Download OREGANO, upload it to S3, bulk-load it into Neptune, and run your first
 
 **Guide:** [docs/step_03_load_and_query.md](docs/step_03_load_and_query.md)
 
-### Step 4 — Validate and Troubleshoot
-
-Confirm everything worked and fix common problems.
-
-- Pass/fail checklists for each phase
-- Common error patterns and recovery steps
-
-**Guide:** [docs/tests_and_validation.md](docs/tests_and_validation.md)
-
 ---
 
 ## Estimated Time
@@ -177,7 +168,7 @@ knowledge_graphs_chemistry/
 │   ├── step_01_aws_auth.md    ← Step 1 guide
 │   ├── step_02_neptune_setup.md ← Step 2 guide
 │   ├── step_03_load_and_query.md ← Step 3 guide
-│   └── tests_and_validation.md  ← Step 4 guide
+│   └── (no separate validation file)
 ├── queries/
 │   └── sample.sparql          ← example SPARQL query
 └── scripts/

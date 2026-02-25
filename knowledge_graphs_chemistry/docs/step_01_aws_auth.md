@@ -2,6 +2,12 @@
 
 This step configures AWS credentials for this demo project and verifies they work.
 
+## Automation Path
+
+This step is mostly manual by design because it depends on your account access method and credential policies.
+There is no full one-command automation for this step.
+If your profiles already work, skip to **Section 4** in this file.
+
 If you are new to AWS:
 
 - Think of this step as "connect my terminal to my AWS account."
