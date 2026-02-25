@@ -48,6 +48,10 @@ def parse_bindings(payload: dict[str, Any]) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def load_sample_query() -> None:
+    st.session_state["query"] = DEFAULT_QUERY
+
+
 def main() -> None:
     st.set_page_config(page_title="Chemistry Graph Interface", layout="wide")
     st.title("Chemistry Knowledge Graph Interface")
@@ -65,14 +69,11 @@ def main() -> None:
     if "query" not in st.session_state:
         st.session_state["query"] = DEFAULT_QUERY
 
-    st.text_area("SPARQL query", key="query", height=220)
-
     col1, col2 = st.columns(2)
     run = col1.button("Run query", type="primary")
-    sample = col2.button("Load sample")
+    col2.button("Load sample", on_click=load_sample_query)
 
-    if sample:
-        st.session_state["query"] = DEFAULT_QUERY
+    st.text_area("SPARQL query", key="query", height=220)
 
     if run:
         try:
