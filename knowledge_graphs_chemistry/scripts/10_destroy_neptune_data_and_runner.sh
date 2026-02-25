@@ -12,6 +12,7 @@ ROLE_NEPTUNE="${ROLE_NEPTUNE:-NeptuneLoadFromS3Role}"
 ROLE_EC2="${ROLE_EC2:-CloudbankDemoEc2Role}"
 PROFILE_EC2="${PROFILE_EC2:-CloudbankDemoEc2Profile}"
 ROLE_UI_TASK="${ROLE_UI_TASK:-CloudbankChemistryUiTaskRole}"
+ROLE_ECS_EXECUTION="${ROLE_ECS_EXECUTION:-ecsTaskExecutionRole}"
 
 if [[ -f .env ]]; then
   set -a
@@ -91,14 +92,30 @@ if aws iam get-role --role-name "$ROLE_EC2" >/dev/null 2>&1; then
 fi
 
 if aws iam get-role --role-name "$ROLE_NEPTUNE" >/dev/null 2>&1; then
-  aws iam detach-role-policy --role-name "$ROLE_NEPTUNE" --policy-arn arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess >/dev/null 2>&1 || true
-  aws iam delete-role-policy --role-name "$ROLE_NEPTUNE" --policy-name NeptuneLoadSpecificBucket >/dev/null 2>&1 || true
+  for policy_arn in $(aws iam list-attached-role-policies --role-name "$ROLE_NEPTUNE" --query 'AttachedPolicies[].PolicyArn' --output text 2>/dev/null || true); do
+    aws iam detach-role-policy --role-name "$ROLE_NEPTUNE" --policy-arn "$policy_arn" >/dev/null 2>&1 || true
+  done
+  for policy_name in $(aws iam list-role-policies --role-name "$ROLE_NEPTUNE" --query 'PolicyNames' --output text 2>/dev/null || true); do
+    aws iam delete-role-policy --role-name "$ROLE_NEPTUNE" --policy-name "$policy_name" >/dev/null 2>&1 || true
+  done
   aws iam delete-role --role-name "$ROLE_NEPTUNE" >/dev/null 2>&1 || true
 fi
 
 if aws iam get-role --role-name "$ROLE_UI_TASK" >/dev/null 2>&1; then
-  aws iam detach-role-policy --role-name "$ROLE_UI_TASK" --policy-arn arn:aws:iam::aws:policy/AdministratorAccess >/dev/null 2>&1 || true
+  for policy_arn in $(aws iam list-attached-role-policies --role-name "$ROLE_UI_TASK" --query 'AttachedPolicies[].PolicyArn' --output text 2>/dev/null || true); do
+    aws iam detach-role-policy --role-name "$ROLE_UI_TASK" --policy-arn "$policy_arn" >/dev/null 2>&1 || true
+  done
   aws iam delete-role --role-name "$ROLE_UI_TASK" >/dev/null 2>&1 || true
+fi
+
+if aws iam get-role --role-name "$ROLE_ECS_EXECUTION" >/dev/null 2>&1; then
+  CLUSTER_ARNS="$(aws ecs list-clusters --region "$AWS_REGION" --query 'clusterArns' --output text 2>/dev/null || true)"
+  if [[ -z "$CLUSTER_ARNS" || "$CLUSTER_ARNS" == "None" ]]; then
+    for policy_arn in $(aws iam list-attached-role-policies --role-name "$ROLE_ECS_EXECUTION" --query 'AttachedPolicies[].PolicyArn' --output text 2>/dev/null || true); do
+      aws iam detach-role-policy --role-name "$ROLE_ECS_EXECUTION" --policy-arn "$policy_arn" >/dev/null 2>&1 || true
+    done
+    aws iam delete-role --role-name "$ROLE_ECS_EXECUTION" >/dev/null 2>&1 || true
+  fi
 fi
 
 echo "Neptune/data/runner cleanup complete."
