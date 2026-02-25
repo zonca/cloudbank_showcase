@@ -39,6 +39,21 @@ Why this is required:
 You need one compute runner in the same Virtual Private Cloud as Neptune.
 You can reuse an existing instance or create one from command line.
 
+Reuse an existing runner by tag:
+
+```bash
+export AWS_PROFILE=cloudbank-demo-admin
+export AWS_REGION=us-west-2
+RUNNER_INSTANCE_ID="$(aws ec2 describe-instances \
+  --region "$AWS_REGION" \
+  --filters Name=tag:Name,Values=cloudbank-neptune-runner Name=instance-state-name,Values=running \
+  --query 'Reservations[0].Instances[0].InstanceId' \
+  --output text)"
+echo "RUNNER_INSTANCE_ID=$RUNNER_INSTANCE_ID"
+```
+
+If that returns `None`, create a new runner with the next command block.
+
 Create a runner (one-time setup):
 
 ```bash
@@ -188,6 +203,25 @@ print(json.dumps(resp.json(), indent=2)[:4000])
 PY
 ```
 
+Automation alternative (run remotely via System Manager, no interactive shell on runner required):
+
+```bash
+MONITOR_COMMAND_ID="$(aws ssm send-command \
+  --region "$AWS_REGION" \
+  --instance-ids "$RUNNER_INSTANCE_ID" \
+  --document-name AWS-RunShellScript \
+  --parameters "commands=[\"export AWS_REGION='$AWS_REGION'\",\"export NEPTUNE_ENDPOINT='$NEPTUNE_ENDPOINT'\",\"export NEPTUNE_LOAD_ID='$NEPTUNE_LOAD_ID'\",\"python3 - <<'PY'\\nimport json, os\\nimport boto3, requests\\nfrom botocore.awsrequest import AWSRequest\\nfrom botocore.auth import SigV4Auth\\nregion=os.getenv('AWS_REGION','us-west-2')\\nendpoint=os.getenv('NEPTUNE_ENDPOINT')\\nload_id=os.getenv('NEPTUNE_LOAD_ID')\\nurl=f\\\"https://{endpoint}:8182/loader?loadId={load_id}&details=TRUE\\\"\\ncreds=boto3.Session().get_credentials().get_frozen_credentials()\\nreq=AWSRequest(method='GET',url=url)\\nSigV4Auth(creds,'neptune-db',region).add_auth(req)\\nresp=requests.get(url,headers=dict(req.headers.items()),timeout=60)\\nprint(resp.status_code)\\nprint(resp.text)\\nPY\"]" \
+  --query 'Command.CommandId' \
+  --output text)"
+
+aws ssm list-command-invocations \
+  --region "$AWS_REGION" \
+  --command-id "$MONITOR_COMMAND_ID" \
+  --details \
+  --query 'CommandInvocations[0].CommandPlugins[0].Output' \
+  --output text
+```
+
 Status meanings:
 
 - `LOAD_IN_PROGRESS`: ingestion is still running
@@ -226,6 +260,25 @@ Why this query is useful:
 
 - It is schema-agnostic and fast.
 - It confirms data is queryable even before you design domain-specific SPARQL queries.
+
+Automation alternative (run query via System Manager):
+
+```bash
+QUERY_COMMAND_ID="$(aws ssm send-command \
+  --region "$AWS_REGION" \
+  --instance-ids "$RUNNER_INSTANCE_ID" \
+  --document-name AWS-RunShellScript \
+  --parameters "commands=[\"export AWS_REGION='$AWS_REGION'\",\"export NEPTUNE_ENDPOINT='$NEPTUNE_ENDPOINT'\",\"python3 - <<'PY'\\nimport boto3, requests\\nfrom botocore.awsrequest import AWSRequest\\nfrom botocore.auth import SigV4Auth\\nregion='${AWS_REGION}'\\nendpoint='${NEPTUNE_ENDPOINT}'\\nquery='SELECT * WHERE { ?s ?p ?o } LIMIT 3'\\nurl=f\\\"https://{endpoint}:8182/sparql\\\"\\ncreds=boto3.Session().get_credentials().get_frozen_credentials()\\nreq=AWSRequest(method='POST',url=url,data=query,headers={\\\"Content-Type\\\":\\\"application/sparql-query\\\",\\\"Accept\\\":\\\"application/sparql-results+json\\\"})\\nSigV4Auth(creds,'neptune-db',region).add_auth(req)\\nheaders=dict(req.headers.items())\\nheaders['Accept']='application/sparql-results+json'\\nresp=requests.post(url,headers=headers,data=query.encode(),timeout=60)\\nprint(resp.status_code)\\nprint(resp.text[:1200])\\nPY\"]" \
+  --query 'Command.CommandId' \
+  --output text)"
+
+aws ssm list-command-invocations \
+  --region "$AWS_REGION" \
+  --command-id "$QUERY_COMMAND_ID" \
+  --details \
+  --query 'CommandInvocations[0].CommandPlugins[0].Output' \
+  --output text
+```
 
 Post-load aggregate validation:
 
