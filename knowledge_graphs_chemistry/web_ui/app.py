@@ -64,6 +64,7 @@ def parse_bindings(payload: dict[str, Any]) -> pd.DataFrame:
 
 def load_sample_query() -> None:
     st.session_state["query"] = DEFAULT_QUERY
+    st.session_state["run_after_restore"] = True
 
 
 def prettify_column_names(frame: pd.DataFrame) -> pd.DataFrame:
@@ -87,6 +88,8 @@ def main() -> None:
 
     if "query" not in st.session_state:
         st.session_state["query"] = DEFAULT_QUERY
+    if "run_after_restore" not in st.session_state:
+        st.session_state["run_after_restore"] = False
 
     col1, col2 = st.columns(2)
     run = col1.button("Run query", type="primary")
@@ -94,7 +97,10 @@ def main() -> None:
 
     st.text_area("SPARQL query", key="query", height=220)
 
-    if run:
+    should_run = run or st.session_state.get("run_after_restore", False)
+
+    if should_run:
+        st.session_state["run_after_restore"] = False
         try:
             url = f"https://{endpoint}:8182/sparql"
             response = signed_post(
