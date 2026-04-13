@@ -52,8 +52,10 @@ http://0.0.0.0:8888/?token=abcdef1234567890...
    http://EXTERNAL_IP:8888/?token=TOKEN
    ```
 
-3. **Open in browser:**
-   Paste this URL into your web browser to access the Jupyter notebook interface.
+ 3. **Open in browser:**
+    Paste this URL into your web browser to access the Jupyter notebook interface.
+
+**Important:** Don't share the token URL with others. The token provides secure access to your Jupyter notebook and GPU instance.
 
 ### Step 4: Verify GPU access
 In Jupyter, create a new Julia notebook and run:
