@@ -119,26 +119,71 @@ Show me the Julia version on the server.
 
 Expected output: `julia version 1.11.x`
 
-## Optional: Install Jupyter extensions
-For better notebook editing, install VSCode server:
-
-```bash
-# Install VS Code server
-curl -fsSL https://code-server.dev/install.sh | sh
-
-# Or use browser-based tools (simpler)
-code-server --bind-addr 0.0.0.0:8080
+### Step 8: Install Jupyter
+Ask Gemini to install Jupyter using conda:
+```
+SSH into the server and install Jupyter using conda.
 ```
 
-## Next steps
-Now you're ready to proceed with the ocean modeling tutorial:
-1. Clone this repository (or upload the notebook)
-2. Install required Julia packages
-3. Run the Jupyter notebook with GPU acceleration
+**Installation command:**
+```bash
+conda install -y jupyter
+```
 
-**Tip:** Remember to delete the instance when you're done to avoid ongoing charges:
+### Step 9: Install Julia packages
+Ask Gemini to set up the Julia environment with the required packages:
+```
+SSH into the server and activate the current directory, then add these Julia packages: Oceananigans v0.99.0, Reactant, Enzyme, CUDA, and IJulia.
+```
+
+**Expected Gemini response:**
+```
+The Julia environment on julia-ocean-gpu is now fully set up.
+
+Summary:
+ - Project Activated: Root directory ~ (Home).
+ - Installed Packages:
+     - Oceananigans v0.99.0 (with CUDA and Reactant extensions)
+     - Reactant
+     - Enzyme
+     - CUDA
+     - IJulia (built and ready for Jupyter)
+
+Important Note: Oceananigans emitted a warning about being tested primarily on Julia v1.10, but it successfully precompiled for your v1.11.9 installation.
+```
+
+### Step 10: Launch Jupyter notebook
+Ask Gemini to start Jupyter:
+```
+SSH into the server and launch Jupyter notebook using IJulia. Make it run in detached mode so it stays running in the background.
+```
+
+**Julia command:**
+```bash
+julia -e "using IJulia; notebook(dir=pwd(), detached=true)"
+```
+
+## Next steps - Choose your access method
+
+Now your GPU instance is ready! Choose one of these methods to access the Jupyter notebook:
+
+**Option 1: Browser-based Jupyter**
+- Simpler setup, works in any browser
+- See tutorial: [`2_access_jupyter_browser.md`](2_access_jupyter_browser.md)
+- Best for: Quick access, Chromebooks, mobile devices
+
+**Option 2: VS Code Remote**
+- Full IDE experience with debugging and IntelliSense
+- See tutorial: [`2_access_jupyter_vscode.md`](2_access_jupyter_vscode.md)
+- Best for: Serious development, debugging, advanced users
+
+Both methods provide full access to the GPU-accelerated Julia environment and the ocean modeling notebook.
+
+## Cleanup
+**Remember to delete the instance when you're done to avoid ongoing charges:**
 
 ```bash
 # Run this from Cloud Shell (not inside the instance)
-gcloud compute instances delete $INSTANCE_NAME --zone=$ZONE
+gcloud compute instances stop julia-ocean-gpu --zone=us-west1-b
+gcloud compute instances delete julia-ocean-gpu --zone=us-west1-b
 ```
