@@ -170,7 +170,7 @@ julia -e "using IJulia; notebook(dir=pwd(), detached=true, token=true)"
 Now your GPU instance is ready! Choose one of these methods to access the Jupyter notebook:
 
 **Option 1: Browser-based Jupyter** (Tutorial 2)
-- Simpler setup, works in any browser
+- Simple setup, works in any browser
 - See tutorial: [`2_access_jupyter_browser.md`](2_access_jupyter_browser.md)
 - Best for: Quick access, Chromebooks, mobile devices
 

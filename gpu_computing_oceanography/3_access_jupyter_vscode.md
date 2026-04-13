@@ -1,6 +1,6 @@
-# 3 - Access Jupyter with VS Code
+# 3 - Access with VS Code Remote
 
-Goal: Configure VS Code to connect to your GPU instance and run Jupyter notebooks with full IDE capabilities.
+Goal: Use VS Code Remote SSH to connect to your GPU instance and run Jupyter notebooks with full IDE capabilities.
 
 **Advantages of VS Code over browser Jupyter:**
 - Full IDE with debugging, IntelliSense, and advanced editing
@@ -12,20 +12,9 @@ Goal: Configure VS Code to connect to your GPU instance and run Jupyter notebook
 ## Prerequisites
 - Completed tutorial 1 (GPU instance created and Julia packages installed)
 - VS Code installed on your local machine
-- VS Code Python and Julia extensions installed
+- VS Code Remote - SSH extension installed
 
-## Option: Install VS Code Server (simpler alternative)
-If you prefer a completely browser-based experience similar to Jupyter, ask Gemini:
-```
-SSH into the server and install code-server.
-```
-
-**Installation:**
-```bash
-curl -fsSL https://code-server.dev/install.sh | sh
-```
-
-Then create a firewall rule and access code-server at `http://EXTERNAL_IP:8080`.
+**Note:** You do NOT need Julia or Python installed locally. VS Code will install the Julia and Python extensions on the remote server automatically when you connect.
 
 ## Access from local VS Code
 
@@ -83,7 +72,7 @@ julia --version
 
 Expected output: `julia version 1.11.9`
 
-### Step 6: Upload or clone the notebook
+### Step 6: Upload the tutorial notebook
 
 **Option A - Clone repository:**
 ```bash
