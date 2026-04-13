@@ -68,18 +68,31 @@ CUDA.versioninfo()
 Expected output should show:
 ```
 CUDA toolchain: 
-- runtime 12.1, artifact installation
+- runtime 13.2, artifact installation
 - driver 535.288.1 for 13.2
-- compiler 12.9
+- compiler 13.2
 
 CUDA libraries: 
-- CUBLAS: 12.1.3
-- CURAND: 10.3.2
-- CUFFT: 11.0.2
-- CUSOLVER: 11.4.5
-- CUSPARSE: 12.1.0
-- CUPTI: 2023.1.1 (API 11.8.0)
+- CUBLAS: 13.3.0
+- CURAND: 10.4.2
+- CUFFT: 12.2.0
+- CUSOLVER: 12.1.0
+- CUSPARSE: 12.7.9
+- CUPTI: 2026.1.0 (API 13.2.0)
 - NVML: 12.0.0+535.288.1
+
+Julia packages: 
+- CUDA: 5.11.0
+- GPUArrays: 11.4.1
+- GPUCompiler: 1.9.1
+- KernelAbstractions: 0.9.41
+- CUDA_Driver_jll: 13.2.0+0
+- CUDA_Compiler_jll: 0.4.2+0
+- CUDA_Runtime_jll: 0.21.0+0
+
+Toolchain:
+- Julia: 1.11.9
+- LLVM: 16.0.6
 
 1 device:
   0: Tesla T4 (sm_75, 14.576 GiB / 15.000 GiB available)
