@@ -1,6 +1,12 @@
 # 2 - Access Jupyter Notebook via Browser
 
-Goal: Configure firewall rules and access the Jupyter notebook running on your GPU instance through a web browser.
+Goal: Configure firewall rules and access the Jupyter notebook running on your GPU instance through a web browser. This provides the simplest access method and works in any web browser.
+
+**Advantages of browser-based Jupyter:**
+- No local software installation required
+- Works on any device with a web browser
+- Quick setup - just open firewall and access via URL
+- Perfect for Chromebooks and mobile devices
 
 ## Prerequisites
 - Completed tutorial 1 (GPU instance created and Jupyter notebook running)
@@ -100,4 +106,4 @@ CUDA libraries:
 - **Slow performance:** This is normal during first GPU compilation; subsequent runs will be much faster
 
 ## Alternative access method
-If you prefer using VS Code instead of browser-based Jupyter, see tutorial [`2_access_jupyter_vscode.md`](2_access_jupyter_vscode.md).
+If you prefer using VS Code instead of browser-based Jupyter for a full IDE experience, see tutorial [`3_access_jupyter_vscode.md`](3_access_jupyter_vscode.md).

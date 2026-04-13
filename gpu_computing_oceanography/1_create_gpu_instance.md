@@ -167,14 +167,14 @@ julia -e "using IJulia; notebook(dir=pwd(), detached=true)"
 
 Now your GPU instance is ready! Choose one of these methods to access the Jupyter notebook:
 
-**Option 1: Browser-based Jupyter**
+**Option 1: Browser-based Jupyter** (Tutorial 2)
 - Simpler setup, works in any browser
 - See tutorial: [`2_access_jupyter_browser.md`](2_access_jupyter_browser.md)
 - Best for: Quick access, Chromebooks, mobile devices
 
-**Option 2: VS Code Remote**
+**Option 2: VS Code Remote** (Tutorial 3)
 - Full IDE experience with debugging and IntelliSense
-- See tutorial: [`2_access_jupyter_vscode.md`](2_access_jupyter_vscode.md)
+- See tutorial: [`3_access_jupyter_vscode.md`](3_access_jupyter_vscode.md)
 - Best for: Serious development, debugging, advanced users
 
 Both methods provide full access to the GPU-accelerated Julia environment and the ocean modeling notebook.
