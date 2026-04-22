@@ -1,3 +1,4 @@
+using Oceananigans.Grids: ynode, znode
 using Oceananigans.Architectures: ReactantState
 using Oceananigans
 using Oceananigans.Units
@@ -56,8 +57,8 @@ function build_model(grid, Δt₀, parameters)
 
     @inline function temperature_relaxation(i, j, k, grid, clock, model_fields, p)
         timescale = p.λt
-        y = grid.yᶜᵃᵃ[j]
-        z = grid.zᵃᵃᶜ[k]
+        y = ynode(j, grid, Center())
+        z = znode(k, grid, Center())
         target_T = initial_temperature(z, p)
         T = @inbounds model_fields.T[i, j, k]
         return -1 / timescale * mask(y, p) * (T - target_T)

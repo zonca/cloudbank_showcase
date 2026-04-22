@@ -1,3 +1,4 @@
+using CUDA
 # ==============================================================================
 # 🌊 MULTI-GPU OCEANOGRAPHY TUTORIAL: REENTRANT CHANNEL WITH ADJOINT SENSITIVITY
 # ==============================================================================
@@ -10,9 +11,18 @@
 # ------------------------------------------------------------------------------
 using MPI
 MPI.Init()
+
+using CUDA
 const comm = MPI.COMM_WORLD
 const rank = MPI.Comm_rank(comm)
+# Force each rank to only see its assigned GPU
+CUDA.device!(rank)
+
+
 const nranks = MPI.Comm_size(comm)
+
+# Ensure each MPI rank only sees ONE specific GPU
+CUDA.device!(rank)
 
 using Pkg
 Pkg.activate(".")
@@ -89,10 +99,10 @@ end
 # ------------------------------------------------------------------------------
 
 # STEP 4.1: Define the Distributed Architecture (2x2 Grid = 4 GPUs)
-partition = Partition(x=2, y=2)
+partition = Partition(x=2, y=1)
 architecture = ReactantState()
 
-if rank == 0; @info "Launching 4-GPU Simulation on $(nranks) ranks..."; end
+if rank == 0; @info "Launching 2-GPU Simulation on $(nranks) ranks..."; end
 
 # STEP 4.2: Build Grid and Model (Using Helper Functions)
 Δt₀ = 2.5minutes 

@@ -35,7 +35,7 @@ Use the following command to create a single VM with 4 Tesla T4 GPUs. This confi
 \`\`\`bash 
 gcloud compute instances create julia-ocean-4gpu \
     --zone=us-west1-b \
-    --machine-type=n1-standard-16 \
+    --machine-type=n1-standard-64 \
     --accelerator=type=nvidia-tesla-t4,count=4 \
     --image-family=ubuntu-2204-lts \
     --image-project=ubuntu-os-cloud \
