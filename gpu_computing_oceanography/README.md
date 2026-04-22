@@ -13,6 +13,7 @@ Learn the fundamentals of differentiable oceanography in an interactive Jupyter 
     *   [1 - Create a GPU Instance](1_create_gpu_instance.md)
     *   [2 - Access via Browser](2_access_jupyter_browser.md)
     *   [3 - Access via VS Code](3_access_jupyter_vscode.md)
+    *   [4 - Execute the Tutorial Notebook](4_execute_tutorial_notebook.md)
 
 ---
 
