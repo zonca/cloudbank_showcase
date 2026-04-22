@@ -82,13 +82,13 @@ cd cloudbank_showcase/gpu_computing_oceanography
 
 **Option B - Upload notebook:**
 1. In VS Code's file explorer, right-click and select "Upload Files"
-2. Select `Julia_demo.ipynb` from your local machine
+2. Select `ocean_gpu_tutorial.ipynb` from your local machine
 3. Wait for the upload to complete
 
 ### Step 7: Open the notebook
 
 **Open the Julia notebook:**
-1. Navigate to `gpu_computing_oceanography/Julia_demo.ipynb`
+1. Navigate to `gpu_computing_oceanography/ocean_gpu_tutorial.ipynb`
 2. Right-click the file and select "Open with VS Code"
 3. Select Julia as the kernel when prompted
 4. VS Code will render the notebook beautifully with inline plots
@@ -153,7 +153,7 @@ Toolchain:
 
 ## Next steps
 Now you're ready to run the Julia ocean modeling tutorial:
-1. Open `Julia_demo.ipynb` in VS Code
+1. Open `ocean_gpu_tutorial.ipynb` in VS Code
 2. Run cells sequentially to set up the environment
 3. Execute the differentiable ocean dynamics simulation
 4. Visualize results with GPU-accelerated rendering
