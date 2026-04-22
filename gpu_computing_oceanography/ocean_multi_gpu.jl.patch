@@ -1,0 +1,15 @@
+@@ -1,3 +1,6 @@
++using MPI
++MPI.Init()
++comm = MPI.COMM_WORLD
+ using Pkg; Pkg.activate("."); Pkg.instantiate()
+ using Reactant, Enzyme, CUDA
+ 
+@@ -13,7 +16,6 @@
+ using Oceananigans.TurbulenceClosures: CATKEVerticalDiffusivity, HorizontalFormulation
+ using MPI
+ using Oceananigans.DistributedComputations
+-MPI.Init()
+ using SeawaterPolynomials
+ 
+ using ClimaOcean.Diagnostics: MixedLayerDepthField

@@ -1,23 +1,30 @@
-# GPU Computing in Oceanography on Google Cloud
+# 🌊 GPU Computing in Oceanography on Google Cloud
 
-This project showcases the use of cloud resources for scientific computing, specifically focusing on GPU-accelerated oceanographic simulations using Julia. The goal is to demonstrate how cloud infrastructure can effectively solve scientific problems with a streamlined workflow.
+This showcase demonstrates the power of GPU-accelerated, differentiable ocean modeling using Julia. By leveraging **Reactant.jl (XLA)** and **Enzyme.jl (Automatic Differentiation)**, we can simulate complex ocean dynamics and calculate sensitivities with unprecedented speed.
 
-## Overview
+## 📁 Showcase Structure
 
-The showcase consists of two main components:
+The tutorial is divided into two main tracks:
 
-### 1. Single-Instance Multi-GPU Julia Simulation
-A high-performance simulation designed to run on a single Google Cloud instance equipped with multiple GPUs. 
+### 1. Interactive Exploration (Single GPU)
+Learn the fundamentals of differentiable oceanography in an interactive Jupyter environment.
+*   **Main File:** \`ocean_gpu_tutorial.ipynb\`
+*   **Key Concepts:** Ocean physics, topography (ridges), and calculating cause-and-effect (adjoint gradients).
+*   **Setup Guides:**
+    *   [1 - Create a GPU Instance](1_create_gpu_instance.md)
+    *   [2 - Access via Browser](2_access_jupyter_browser.md)
+    *   [3 - Access via VS Code](3_access_jupyter_vscode.md)
 
-*   **Duration:** Approximately 1 hour.
-*   **Objective:** To provide a scientifically relevant yet accessible example of GPU acceleration in oceanography.
-*   **Contents:** 
-    *   Environment setup instructions.
-    *   A single script to execute the simulation.
+### 2. High-Performance Scaling (4-GPU Distributed)
+Scale your simulation across multiple GPUs using MPI and XLA-distributed computing.
+*   **Main File:** \`ocean_multi_gpu.jl\`
+*   **Key Concepts:** Horizontal domain partitioning, MPI rank coordination, and headless visualization.
+*   **Setup Guides:**
+    *   [4 - Create a 4-GPU Instance](4_create_multi_gpu_instance.md)
+    *   [5 - Run the Multi-GPU Simulation](5_run_multi_gpu_simulation.md)
 
-### 2. Data Analysis & Visualization
-A Jupyter Notebook environment for analyzing the simulation output.
+---
 
-*   **Environment:** Google Cloud instance with Julia and Conda.
-*   **Function:** Loads the data produced by the simulation and generates visualizations.
-*   **Output:** High-quality plots demonstrating the simulation results.
+## 🚀 Getting Started
+
+If you are new to this showcase, start with **[Step 1: Create a GPU Instance](1_create_gpu_instance.md)** to set up your environment on Google Cloud.
