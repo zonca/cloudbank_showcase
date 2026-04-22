@@ -100,9 +100,9 @@ Toolchain:
 
 ## Upload the tutorial notebook
 1. In Jupyter, click **Upload** in the top right corner
-2. Select the `ocean_gpu_tutorial.ipynb` file from your local machine
+2. Select the `ocean_gpu_tutorial.ipynb`, `ocean_utils.jl`, and `Project.toml` files from your local machine
 3. Click **Upload** to confirm
-4. Open the uploaded notebook to begin the ocean modeling tutorial
+4. Open the tutorial notebook to begin the ocean modeling tutorial
 
 ## Security considerations
 **Important:** The firewall rule allows access from any IP address. When you're done working:

@@ -130,9 +130,15 @@ SSH into the server and install Jupyter using conda.
 conda install -y jupyter
 ```
 
-### Step 9: Install Julia packages
-Ask Gemini to set up the Julia environment with the required packages:
+### Step 9: Prepare the Simulation Environment
+Ask Gemini to set up the Julia environment by cloning the repository:
 ```
+SSH into the server and clone the showcase repository:
+git clone https://github.com/zonca/cloudbank_showcase.git
+cd cloudbank_showcase/gpu_computing_oceanography/
+```
+
+**Note:** The simulation environment will be automatically configured when you run the first cell of the tutorial notebook.
 SSH into the server and activate the current directory, then add these Julia packages: Oceananigans v0.99.0, Reactant, Enzyme, CUDA, and IJulia.
 ```
 
@@ -141,13 +147,9 @@ SSH into the server and activate the current directory, then add these Julia pac
 The Julia environment on julia-ocean-gpu is now fully set up.
 
 Summary:
- - Project Activated: Root directory ~ (Home).
- - Installed Packages:
-     - Oceananigans v0.99.0 (with CUDA and Reactant extensions)
-     - Reactant
-     - Enzyme
-     - CUDA
-     - IJulia (built and ready for Jupyter)
+ - Project Cloned: ~/cloudbank_showcase
+ - Environment: Managed by Project.toml
+ - Dependencies: Oceananigans, Reactant, Enzyme, CUDA, etc. (Automated via Pkg.instantiate)
 
 Important Note: Oceananigans emitted a warning about being tested primarily on Julia v1.10, but it successfully precompiled for your v1.11.9 installation.
 ```

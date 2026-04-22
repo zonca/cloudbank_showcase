@@ -82,7 +82,7 @@ cd cloudbank_showcase/gpu_computing_oceanography
 
 **Option B - Upload notebook:**
 1. In VS Code's file explorer, right-click and select "Upload Files"
-2. Select `ocean_gpu_tutorial.ipynb` from your local machine
+2. Select `ocean_gpu_tutorial.ipynb`, `ocean_utils.jl`, and `Project.toml` from your local machine
 3. Wait for the upload to complete
 
 ### Step 7: Open the notebook
