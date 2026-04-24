@@ -154,19 +154,6 @@ Summary:
 Important Note: Oceananigans emitted a warning about being tested primarily on Julia v1.10, but it successfully precompiled for your v1.11.9 installation.
 ```
 
-### Step 10: Launch Jupyter notebook securely
-Ask Gemini to start Jupyter with authentication enabled:
-```
-SSH into the server and launch Jupyter notebook using IJulia with authentication enabled using a token. Make it run in detached mode so it stays running in the background. Do not disable authentication.
-```
-
-**Julia command:**
-```bash
-julia -e "using IJulia; notebook(dir=pwd(), detached=true, token=true)"
-```
-
-**Security note:** This ensures Jupyter requires a token for access, preventing unauthorized access to your notebook and GPU instance.
-
 ## Next steps - Choose your access method
 
 Now your GPU instance is ready! Choose one of these methods to access the Jupyter notebook:

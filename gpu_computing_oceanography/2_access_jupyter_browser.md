@@ -9,15 +9,29 @@ Goal: Configure firewall rules and access the Jupyter notebook running on your G
 - Perfect for Chromebooks and mobile devices
 
 ## Prerequisites
-- Completed tutorial 1 (GPU instance created and Jupyter notebook running)
-- Jupyter notebook is currently running in detached mode on the server
+- Completed tutorial 1 (GPU instance created)
+- Jupyter not yet running on the server
+
+### Step 1: Launch Jupyter notebook securely
+Ask Gemini to start Jupyter with authentication enabled:
+```
+SSH into the server and launch Jupyter notebook using IJulia with authentication enabled using a token. Make it run in detached mode so it stays running in the background. Do not disable authentication. Make the Jupyter server accessible over the network.
+```
+
+**Julia command:**
+```bash
+julia -e "using IJulia; notebook(dir=pwd(), detached=true, token=true)"
+```
+
+**Security note:** This ensures Jupyter requires a token for access, preventing unauthorized access to your notebook and GPU instance.
 
 ## Open firewall port for Jupyter
 
-### Step 1: Allow Jupyter port access
+### Step 2: Allow Jupyter port access
 Ask Gemini to create a firewall rule to allow access to Jupyter:
 ```
 Create a firewall rule to allow access to port 8888 for Jupyter notebook. The rule should allow TCP traffic from any IP address.
+Then show the the full connection url for Jupyter including the external IP and the token
 ```
 
 **Expected firewall rule creation:**
@@ -28,32 +42,13 @@ gcloud compute firewall-rules create allow-jupyter \
   --description "Allow Jupyter notebook access"
 ```
 
-### Step 2: Get connection information
-Ask Gemini to retrieve the Jupyter connection details:
+Gemini will also provide the connection URL with a token, typically looking like:
 ```
-Show me the Jupyter notebook connection details including the URL and token from the server.
-```
-
-Gemini will provide the connection URL with a token, typically looking like:
-```
-http://0.0.0.0:8888/?token=abcdef1234567890...
+http://xxx.xxx.xxx.xxx:8888/?token=abcdef1234567890...
 ```
 
-### Step 3: Access the notebook
-1. **Get the server's external IP address:**
-   Ask Gemini:
-   ```
-   Show me the external IP address of the server.
-   ```
-
-2. **Construct the access URL:**
-   Replace `0.0.0.0` with the external IP address in the Jupyter URL:
-   ```
-   http://EXTERNAL_IP:8888/?token=TOKEN
-   ```
-
- 3. **Open in browser:**
-    Paste this URL into your web browser to access the Jupyter notebook interface.
+### Step 3: Open in the browser
+Paste the URL from the previous step into your web browser to access the Jupyter notebook interface.
 
 **Important:** Don't share the token URL with others. The token provides secure access to your Jupyter notebook and GPU instance.
 
