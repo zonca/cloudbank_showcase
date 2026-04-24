@@ -18,15 +18,12 @@ Depending on which method you used to connect to your GPU instance, open the `oc
 
 ## Step 2: Run the Notebook and Verify GPU
 
-### 1. Initialize the Environment
+### 1. Verify the Environment
 Click on the first code cell and run it (Shift + Enter).
 ```julia
-using Pkg; Pkg.activate("."); Pkg.instantiate()
-using Reactant, Enzyme, CUDA, MPI, Oceananigans
-using Oceananigans.Architectures: ReactantState
-include("ocean_utils.jl")
-
-MPI.Init()
+using Pkg
+Pkg.build("CUDA")
+using CUDA
 CUDA.versioninfo()
 ```
 

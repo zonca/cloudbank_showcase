@@ -15,15 +15,20 @@ Goal: Configure firewall rules and access the Jupyter notebook running on your G
 ### Step 1: Launch Jupyter notebook securely
 Ask Gemini to start Jupyter with authentication enabled:
 ```
-SSH into the server and launch Jupyter notebook using IJulia with authentication enabled using a token. Make it run in detached mode so it stays running in the background. Do not disable authentication. Make the Jupyter server accessible over the network.
+SSH into the server and launch Jupyter notebook using IJulia so it is accessible over the network and runs in the background.
 ```
 
 **Julia command:**
 ```bash
-julia -e "using IJulia; notebook(dir=pwd(), detached=true, token=true)"
+julia -e 'using IJulia; notebook(`--ip=0.0.0.0 --no-browser`, dir=pwd(), detached=true)'
 ```
 
-**Security note:** This ensures Jupyter requires a token for access, preventing unauthorized access to your notebook and GPU instance.
+Then ask Gemini to retrieve the Jupyter URL with token:
+```
+Show me the Jupyter server URL including the token from the running Jupyter process logs.
+```
+
+**Security note:** Jupyter auto-generates a secure token. The full URL including the token will be printed in the logs — only share it with trusted users.
 
 ## Open firewall port for Jupyter
 

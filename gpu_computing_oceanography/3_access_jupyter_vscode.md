@@ -142,7 +142,7 @@ Toolchain:
 - Try restarting the remote connection
 
 **Julia kernel issues:**
-- Run `julia -e "using IJulia; installkernel("Julia")"` in the remote terminal
+- Run `julia -e 'using IJulia; installkernel("Julia")'` in the remote terminal
 - Ensure Julia 1.11.9 is the default version
 - Check that IJulia is properly installed
 

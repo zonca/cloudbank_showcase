@@ -120,36 +120,59 @@ Show me the Julia version on the server.
 Expected output: `julia version 1.11.x`
 
 ### Step 8: Install Jupyter
-Ask Gemini to install Jupyter using conda:
+Ask Gemini to install Jupyter and register the Julia kernel:
 ```
-SSH into the server and install Jupyter using conda.
+SSH into the server and install jupyter-nbconvert via apt, then register the Julia kernel for Jupyter.
 ```
 
-**Installation command:**
+**Installation commands:**
 ```bash
-conda install -y jupyter
+sudo apt-get install -y jupyter-nbconvert
+julia -e "using IJulia; installkernel(\"Julia\")"
 ```
 
 ### Step 9: Prepare the Simulation Environment
-Ask Gemini to set up the Julia environment by cloning the repository:
+Ask Gemini to clone the repository and install all Julia packages:
 ```
-SSH into the server and clone the showcase repository:
+SSH into the server, clone the showcase repository, then install all required Julia packages globally with the correct versions.
+```
+
+**Commands:**
+```bash
 git clone https://github.com/zonca/cloudbank_showcase.git
 cd cloudbank_showcase/gpu_computing_oceanography/
 ```
 
-**Note:** The simulation environment will be automatically configured when you run the first cell of the tutorial notebook.
-SSH into the server and activate the current directory, then add these Julia packages: Oceananigans v0.99.0, Reactant, Enzyme, CUDA, and IJulia.
+Then in the Julia REPL (or via `julia -e '...'`):
+```julia
+using Pkg
+
+Pkg.add([
+    PackageSpec(name="Oceananigans", version="0.99.0"),
+    PackageSpec(name="Reactant"),
+    PackageSpec(name="Enzyme"),
+    PackageSpec(name="CUDA"),
+    PackageSpec(name="CairoMakie"),
+    PackageSpec(name="ClimaOcean"),
+    PackageSpec(name="SeawaterPolynomials"),
+    PackageSpec(name="IJulia"),
+    PackageSpec(name="JLD2"),
+    PackageSpec(name="MPI"),
+    PackageSpec(name="FileIO"),
+])
+Pkg.build("CUDA")
 ```
+
+**Important:** Packages are installed into the **global environment** — do not run `Pkg.activate(".")` before this step. Precompilation will take 15–20 minutes on first run.
 
 **Expected Gemini response:**
 ```
 The Julia environment on julia-ocean-gpu is now fully set up.
 
 Summary:
- - Project Cloned: ~/cloudbank_showcase
- - Environment: Managed by Project.toml
- - Dependencies: Oceananigans, Reactant, Enzyme, CUDA, etc. (Automated via Pkg.instantiate)
+ - Project Cloned: ~/cloudbank_showcase/gpu_computing_oceanography
+ - Packages installed globally: Oceananigans v0.99.0, Reactant, Enzyme, CUDA, etc.
+ - CUDA backend rebuilt and verified.
 
 Important Note: Oceananigans emitted a warning about being tested primarily on Julia v1.10, but it successfully precompiled for your v1.11.9 installation.
 ```
